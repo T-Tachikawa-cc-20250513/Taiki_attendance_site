@@ -1,9 +1,12 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import MainLayout from '@/Layouts/MainLayout';
 
 export default function Punch() {
     const [currentTime, setCurrentTime] = useState(new Date());
+
+    const { auth } = usePage().props;
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -26,23 +29,20 @@ export default function Punch() {
     };
 
     return (
-        <>
+        <MainLayout>
             <Head title="打刻画面" />
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-                    <h1 className="text-3xl font-bold text-center mb-8">
-                        勤怠管理システム
-                    </h1>
                     <div className="mb-6 text-center">
                         <p className="text-gray-500">社員番号</p>
                         <p className="text-xl font-semibold">
-                            000001
+                            T000{auth.user?.id}
                         </p>
                     </div>
                     <div className="mb-6 text-center">
                         <p className="text-gray-500">氏名</p>
                         <p className="text-xl font-semibold">
-                            テストユーザー
+                            {auth.user?.name}
                         </p>
                     </div>
                     <div className="mb-8 text-center">
@@ -77,6 +77,6 @@ export default function Punch() {
 
                 </div>
             </div>
-        </>
+        </MainLayout>
     );
 }
