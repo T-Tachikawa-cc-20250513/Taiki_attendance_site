@@ -24,7 +24,7 @@ export default function Punch() {
 
             alert(response.data.message);
         } catch (error) {
-            alert('打刻失敗');
+            alert(error.response.data.message);
         }
     };
 

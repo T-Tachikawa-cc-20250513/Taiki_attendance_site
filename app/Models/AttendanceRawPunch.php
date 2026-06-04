@@ -14,4 +14,9 @@ class AttendanceRawPunch extends Model
         'longitude',
         'source',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
