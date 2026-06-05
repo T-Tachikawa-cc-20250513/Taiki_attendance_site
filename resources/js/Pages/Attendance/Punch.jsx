@@ -1,9 +1,13 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import MainLayout from '@/Layouts/MainLayout';
 
-export default function Punch() {
+export default function Punch({
+        lastPunchType,
+        todayIn,
+        todayOut
+    }){
     const [currentTime, setCurrentTime] = useState(new Date());
 
     const { auth } = usePage().props;
@@ -18,11 +22,10 @@ export default function Punch() {
 
     const handlePunch = async (type) => {
         try {
-            const response = await axios.post('/punch', {
+            await axios.post('/punch', {
                 punch_type: type,
             });
-
-            alert(response.data.message);
+            router.reload();
         } catch (error) {
             alert(error.response.data.message);
         }
@@ -57,18 +60,76 @@ export default function Punch() {
                         </p>
                     </div>
 
+                    <div className="mb-6">
+
+                        <div className="mb-3 text-center">
+                            <p className="text-gray-500">
+                                本日の出勤時刻
+                            </p>
+
+                            <p className="text-xl font-semibold">
+                                {todayIn
+                                    ? new Date(todayIn).toLocaleTimeString(
+                                        'ja-JP',
+                                        {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        }
+                                    )
+                                    : '--:--'}
+                            </p>
+                        </div>
+
+                        <div className="text-center">
+                            <p className="text-gray-500">
+                                本日の退勤時刻
+                            </p>
+
+                            <p className="text-xl font-semibold">
+                                {todayOut
+                                    ? new Date(todayOut).toLocaleTimeString(
+                                        'ja-JP',
+                                        {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                        }
+                                    )
+                                    : '--:--'}
+                            </p>
+                        </div>
+
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
 
                         <button
                             onClick={() => handlePunch('IN')}
-                            className="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-bold"
+                            disabled={lastPunchType === 'IN'}
+                            className="
+                                bg-blue-500
+                                hover:bg-blue-600
+                                disabled:bg-gray-400
+                                text-white
+                                py-3
+                                rounded-lg
+                                font-bold
+                            "
                         >
                             出勤
                         </button>
 
                         <button
                             onClick={() => handlePunch('OUT')}
-                            className="bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-bold"
+                            disabled={lastPunchType === 'OUT'}
+                            className="
+                                bg-red-500
+                                hover:bg-red-600
+                                disabled:bg-gray-400
+                                text-white
+                                py-3
+                                rounded-lg
+                                font-bold
+                            "
                         >
                             退勤
                         </button>

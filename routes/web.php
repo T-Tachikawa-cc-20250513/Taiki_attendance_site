@@ -1,15 +1,52 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
+use App\Models\AttendanceRawPunch;
 use App\Http\Controllers\AttendanceController;
 
-//打刻画面
+// 打刻画面（未ログインでも表示）
 Route::get('/', function () {
-    return Inertia::render('Attendance/Punch');
+
+    $lastPunch = null;
+    $todayIn = null;
+    $todayOut = null;
+
+    if (Auth::check()) {
+
+        $lastPunch = AttendanceRawPunch::where(
+            'user_id',
+            Auth::id()
+        )
+        ->latest('punched_at')
+        ->first();
+
+        $todayIn = AttendanceRawPunch::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereDate('punched_at', today())
+        ->where('punch_type', 'IN')
+        ->orderBy('punched_at')
+        ->first();
+
+        $todayOut = AttendanceRawPunch::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereDate('punched_at', today())
+        ->where('punch_type', 'OUT')
+        ->latest('punched_at')
+        ->first();
+    }
+
+    return Inertia::render('Attendance/Punch', [
+        'lastPunchType' => $lastPunch?->punch_type,
+        'todayIn'       => $todayIn?->punched_at,
+        'todayOut'      => $todayOut?->punched_at,
+    ]);
 });
 
 // 勤怠一覧
@@ -22,11 +59,42 @@ Route::get('/admin', function () {
     return Inertia::render('Admin/Dashboard');
 });
 
-//dashboard
+// ログイン後
 Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', function () {
-        return Inertia::render('Attendance/Punch');
+
+        $lastPunch = AttendanceRawPunch::where(
+            'user_id',
+            Auth::id()
+        )
+        ->latest('punched_at')
+        ->first();
+
+        $todayIn = AttendanceRawPunch::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereDate('punched_at', today())
+        ->where('punch_type', 'IN')
+        ->orderBy('punched_at')
+        ->first();
+
+        $todayOut = AttendanceRawPunch::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereDate('punched_at', today())
+        ->where('punch_type', 'OUT')
+        ->latest('punched_at')
+        ->first();
+
+        return Inertia::render('Attendance/Punch', [
+            'lastPunchType' => $lastPunch?->punch_type,
+            'todayIn'       => $todayIn?->punched_at,
+            'todayOut'      => $todayOut?->punched_at,
+        ]);
+
     })->name('dashboard');
 
     Route::post('/punch', [AttendanceController::class, 'punch']);
