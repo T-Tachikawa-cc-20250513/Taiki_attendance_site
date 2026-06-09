@@ -101,3 +101,41 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// 日次勤怠登録画面
+Route::middleware('auth')->group(function () {
+    Route::get('/daily-attendance', function () {
+
+        $todayIn = null;
+        $todayOut = null;
+
+        if (Auth::check()) {
+            $todayIn = AttendanceRawPunch::where(
+                'user_id',
+                Auth::id()
+            )
+            ->whereDate('punched_at', today())
+            ->where('punch_type', 'IN')
+            ->orderBy('punched_at')
+            ->first();
+
+            $todayOut = AttendanceRawPunch::where(
+                'user_id',
+                Auth::id()
+            )
+            ->whereDate('punched_at', today())
+            ->where('punch_type', 'OUT')
+            ->latest('punched_at')
+            ->first();
+
+        }
+
+        return Inertia::render(
+            'Attendance/DailyAttendance',
+            [
+                'todayIn' => $todayIn?->punched_at,
+                'todayOut' => $todayOut?->punched_at,
+            ]
+        );
+    });
+});
