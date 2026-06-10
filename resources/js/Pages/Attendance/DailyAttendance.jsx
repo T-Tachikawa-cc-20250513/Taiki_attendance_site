@@ -2,10 +2,12 @@ import MainLayout from '@/Layouts/MainLayout';
 import { Head } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import axios from 'axios';
 
 export default function DailyAttendance({
     todayIn,
-    todayOut
+    todayOut,
+    dailyAttendance
 }) {
 
     const [startTime, setStartTime] = useState(
@@ -36,7 +38,53 @@ export default function DailyAttendance({
             : ''
     );
 
+    const [workType, setWorkType] = useState('出勤');
+    const [office, setOffice] = useState('SES');
+    const [transportationFee, setTransportationFee] = useState(0);
+    const [remark, setRemark] = useState('');
+
+    const [status, setStatus] = useState(
+        dailyAttendance?.status ?? '未申請'
+    );
+
+    const [isSubmitted, setIsSubmitted] = useState(
+        dailyAttendance !== null
+    );
+
     const { auth } = usePage().props;
+
+    const handleSubmit = async () => {
+        try {
+
+            const response = await axios.post(
+                '/daily-attendance',
+                {
+                    work_type: workType,
+                    office: office,
+                    start_time: startTime,
+                    end_time: endTime,
+                    transportation_fee: transportationFee,
+                    remark: remark,
+                }
+            );
+
+            alert(response.data.message);
+
+            setStatus('申請中');
+            setIsSubmitted(true);
+
+        } catch (error) {
+
+            console.log(error);
+
+            if (error.response) {
+                console.log(error.response.data);
+                alert(error.response.data);
+            }
+
+            alert('日次申請失敗');
+        }
+    };
 
     return (
         <MainLayout>
@@ -87,7 +135,11 @@ export default function DailyAttendance({
                     <label className="font-bold">
                         勤務区分
                     </label>
-                    <select className="border rounded w-full p-2">
+                    <select
+                        value={workType}
+                        onChange={(e) => setWorkType(e.target.value)}
+                        className="border rounded w-full p-2"
+                    >
                         <option>出勤</option>
                         <option>振出</option>
                         <option>欠勤</option>
@@ -101,7 +153,11 @@ export default function DailyAttendance({
                     <label className="font-bold">
                         打刻拠点
                     </label>
-                    <select className="border rounded w-full p-2">
+                    <select
+                        value={office}
+                        onChange={(e) => setOffice(e.target.value)}
+                        className="border rounded w-full p-2"
+                    >
                         <option>SES</option>
                         <option>社内業務</option>
                     </select>
@@ -168,6 +224,8 @@ export default function DailyAttendance({
                     </label>
                     <input
                         type="number"
+                        value={transportationFee}
+                        onChange={(e) => setTransportationFee(e.target.value)}
                         className="border rounded p-2 w-full"
                     />
                 </div>
@@ -178,6 +236,8 @@ export default function DailyAttendance({
                         備考
                     </label>
                     <textarea
+                        value={remark}
+                        onChange={(e) => setRemark(e.target.value)}
                         className="border rounded p-2 w-full"
                     />
                 </div>
@@ -198,19 +258,25 @@ export default function DailyAttendance({
                         申請状況
                     </label>
                     <div>
-                        未申請
+                        {status}
                     </div>
                 </div>
 
                 <div className="flex gap-4">
                     <button
-                        className="
-                            bg-green-500
+                        onClick={handleSubmit}
+                        disabled={isSubmitted}
+                        className={`
                             text-white
                             px-5
                             py-2
                             rounded
-                        "
+                            ${
+                                isSubmitted
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-green-500'
+                            }
+                        `}
                     >
                         日次申請
                     </button>
