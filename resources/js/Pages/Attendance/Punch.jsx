@@ -4,10 +4,9 @@ import axios from 'axios';
 import MainLayout from '@/Layouts/MainLayout';
 
 export default function Punch({
-        lastPunchType,
-        todayIn,
-        todayOut
-    }){
+    todayIn,
+    todayOut
+}) {
     const [currentTime, setCurrentTime] = useState(new Date());
 
     const { auth } = usePage().props;
@@ -36,18 +35,29 @@ export default function Punch({
             <Head title="打刻画面" />
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
                 <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
-                    <div className="mb-6 text-center">
-                        <p className="text-gray-500">社員番号</p>
-                        <p className="text-xl font-semibold">
-                            T000{auth.user?.id}
-                        </p>
-                    </div>
-                    <div className="mb-6 text-center">
-                        <p className="text-gray-500">氏名</p>
-                        <p className="text-xl font-semibold">
-                            {auth.user?.name}
-                        </p>
-                    </div>
+                    
+                    {/* ログイン時のみ表示 */}
+                    {auth.user && (
+                        <>
+                            <div className="mb-6 text-center">
+                                <p className="text-gray-500">
+                                    社員番号
+                                </p>
+                                <p className="text-xl font-semibold">
+                                    T000{auth.user.id}
+                                </p>
+                            </div>
+                            <div className="mb-6 text-center">
+                                <p className="text-gray-500">
+                                    氏名
+                                </p>
+                                <p className="text-xl font-semibold">
+                                    {auth.user.name}
+                                </p>
+                            </div>
+                        </>
+                    )}
+
                     <div className="mb-8 text-center">
                         <p className="text-gray-500 mb-2">
                             現在日時
@@ -61,22 +71,22 @@ export default function Punch({
                     </div>
 
                     <div className="mb-6">
-
                         <div className="mb-3 text-center">
                             <p className="text-gray-500">
                                 本日の出勤時刻
                             </p>
-
                             <p className="text-xl font-semibold">
-                                {todayIn
-                                    ? new Date(todayIn).toLocaleTimeString(
-                                        'ja-JP',
-                                        {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        }
-                                    )
-                                    : '--:--'}
+                                {
+                                    todayIn
+                                        ? new Date(todayIn).toLocaleTimeString(
+                                            'ja-JP',
+                                            {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            }
+                                        )
+                                        : '--:--'
+                                }
                             </p>
                         </div>
 
@@ -84,57 +94,68 @@ export default function Punch({
                             <p className="text-gray-500">
                                 本日の退勤時刻
                             </p>
-
                             <p className="text-xl font-semibold">
-                                {todayOut
-                                    ? new Date(todayOut).toLocaleTimeString(
-                                        'ja-JP',
-                                        {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                        }
-                                    )
-                                    : '--:--'}
+                                {
+                                    todayOut
+                                        ? new Date(todayOut).toLocaleTimeString(
+                                            'ja-JP',
+                                            {
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                            }
+                                        )
+                                        : '--:--'
+                                }
                             </p>
                         </div>
 
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    {/* ログイン時 */}
+                    {auth.user ? (
+                        <div className="grid grid-cols-2 gap-4">
 
-                        <button
-                            onClick={() => handlePunch('IN')}
-                            disabled={lastPunchType === 'IN'}
-                            className="
-                                bg-blue-500
-                                hover:bg-blue-600
-                                disabled:bg-gray-400
-                                text-white
-                                py-3
-                                rounded-lg
-                                font-bold
-                            "
-                        >
-                            出勤
-                        </button>
+                            <button
+                                onClick={() => handlePunch('IN')}
+                                disabled={todayIn || todayOut}
+                                className="
+                                    bg-blue-500
+                                    hover:bg-blue-600
+                                    disabled:bg-gray-400
+                                    text-white
+                                    py-3
+                                    rounded-lg
+                                    font-bold
+                                "
+                            >
+                                出勤
+                            </button>
 
-                        <button
-                            onClick={() => handlePunch('OUT')}
-                            disabled={lastPunchType === 'OUT'}
-                            className="
-                                bg-red-500
-                                hover:bg-red-600
-                                disabled:bg-gray-400
-                                text-white
-                                py-3
-                                rounded-lg
-                                font-bold
-                            "
-                        >
-                            退勤
-                        </button>
+                            <button
+                                onClick={() => handlePunch('OUT')}
+                                disabled={todayOut}
+                                className="
+                                    bg-red-500
+                                    hover:bg-red-600
+                                    disabled:bg-gray-400
+                                    text-white
+                                    py-3
+                                    rounded-lg
+                                    font-bold
+                                "
+                            >
+                                退勤
+                            </button>
 
-                    </div>
+                        </div>
+                    ) : (
+                        /* 非ログイン時 */
+                        <div className="text-center">
+                            <p className="text-lg font-bold text-red-500">
+                                ログインしてください
+                            </p>
+                        </div>
+                    )}
 
                 </div>
             </div>
