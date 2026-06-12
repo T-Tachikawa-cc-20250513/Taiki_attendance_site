@@ -7,7 +7,6 @@ export default function Index({
     attendances,
     month
 }) {
-
     return (
         <MainLayout>
             <Head title="勤怠一覧" />
