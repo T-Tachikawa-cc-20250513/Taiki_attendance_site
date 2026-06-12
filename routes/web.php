@@ -8,6 +8,7 @@ use App\Models\AttendanceRawPunch;
 use App\Models\DailyAttendance;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DailyAttendanceController;
+use App\Http\Controllers\AttendanceListController;
 
 // 打刻画面（未ログインでも表示）
 Route::get('/', function () {
@@ -49,11 +50,6 @@ Route::get('/', function () {
         'todayIn'       => $todayIn?->punched_at,
         'todayOut'      => $todayOut?->punched_at,
     ]);
-});
-
-//勤怠一覧
-Route::get('/attendances', function () {
-    return Inertia::render('Attendance/Index');
 });
 
 //管理者画面
@@ -143,10 +139,22 @@ Route::middleware('auth')->group(function () {
         );
     });
 
-    // 日次申請
+    //日次申請
     Route::post(
         '/daily-attendance',
         [DailyAttendanceController::class, 'store']
+    );
+
+    //日次申請（勤怠一覧）
+    Route::get(
+        '/daily-attendance/{date}',
+        [DailyAttendanceController::class, 'show']
+    );
+
+    //勤怠一覧
+    Route::get(
+        '/attendances',
+        [AttendanceListController::class, 'index']
     );
 });
 

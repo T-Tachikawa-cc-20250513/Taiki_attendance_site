@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DailyAttendance;
+use Carbon\Carbon;
+use Inertia\Inertia;
 
 class DailyAttendanceController extends Controller
 {
@@ -25,5 +27,28 @@ class DailyAttendanceController extends Controller
         return response()->json([
             'message' => '申請成功です！',
         ]);
+    }
+
+    public function show($date)
+    {
+        $attendance = DailyAttendance::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereDate(
+            'work_date',
+            $date
+        )
+        ->first();
+
+        return Inertia::render(
+            'Attendance/DailyAttendance',
+            [
+                'attendance' => $attendance,
+                'targetDate' => $date,
+                'todayIn' => null,
+                'todayOut' => null,
+            ]
+        );
     }
 }

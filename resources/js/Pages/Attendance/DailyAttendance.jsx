@@ -1,55 +1,69 @@
 import MainLayout from '@/Layouts/MainLayout';
-import { Head } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
+import { Head, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import axios from 'axios';
 
 export default function DailyAttendance({
     todayIn,
     todayOut,
-    dailyAttendance
+    attendance
 }) {
 
     const [startTime, setStartTime] = useState(
-        todayIn
-            ? new Date(todayIn)
-                .toLocaleTimeString(
-                    'ja-JP',
-                    {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                    }
-                )
-            : ''
+        attendance?.start_time
+            ?? (
+                todayIn
+                    ? new Date(todayIn).toLocaleTimeString(
+                        'ja-JP',
+                        {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                        }
+                    )
+                    : ''
+            )
     );
 
     const [endTime, setEndTime] = useState(
-        todayOut
-            ? new Date(todayOut)
-                .toLocaleTimeString(
-                    'ja-JP',
-                    {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false,
-                    }
-                )
-            : ''
+        attendance?.end_time
+            ?? (
+                todayOut
+                    ? new Date(todayOut).toLocaleTimeString(
+                        'ja-JP',
+                        {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                        }
+                    )
+                    : ''
+            )
     );
 
-    const [workType, setWorkType] = useState('出勤');
-    const [office, setOffice] = useState('SES');
-    const [transportationFee, setTransportationFee] = useState(0);
-    const [remark, setRemark] = useState('');
+    const [workType, setWorkType] = useState(
+        attendance?.work_type ?? '出勤'
+    );
+
+    const [office, setOffice] = useState(
+        attendance?.office ?? 'SES'
+    );
+
+    const [transportationFee, setTransportationFee] = useState(
+        attendance?.transportation_fee ?? 0
+    );
+
+    const [remark, setRemark] = useState(
+        attendance?.remark ?? ''
+    );
 
     const [status, setStatus] = useState(
-        dailyAttendance?.status ?? '未申請'
+        attendance?.status ?? '未申請'
     );
 
-    const [isSubmitted, setIsSubmitted] = useState(
-        dailyAttendance !== null
-    );
+    const isSubmitted =
+        status === '申請中'
+        || status === '承認済';
 
     const { auth } = usePage().props;
 
@@ -71,7 +85,6 @@ export default function DailyAttendance({
             alert(response.data.message);
 
             setStatus('申請中');
-            setIsSubmitted(true);
 
         } catch (error) {
 
@@ -292,6 +305,7 @@ export default function DailyAttendance({
                         一括登録
                     </button>
                     <button
+                        onClick={() => router.get('/attendances')}
                         className="
                             bg-gray-500
                             text-white
