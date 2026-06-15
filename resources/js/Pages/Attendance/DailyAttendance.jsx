@@ -1,13 +1,15 @@
 import MainLayout from '@/Layouts/MainLayout';
 import { Head, usePage, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 export default function DailyAttendance({
     todayIn,
     todayOut,
-    attendance
+    attendance,
+    targetDate
 }) {
+    const { auth } = usePage().props;
 
     const [startTime, setStartTime] = useState(
         attendance?.start_time
@@ -44,66 +46,122 @@ export default function DailyAttendance({
     const [workType, setWorkType] = useState(
         attendance?.work_type ?? '出勤'
     );
-
     const [office, setOffice] = useState(
         attendance?.office ?? 'SES'
     );
-
     const [transportationFee, setTransportationFee] = useState(
         attendance?.transportation_fee ?? 0
     );
-
     const [remark, setRemark] = useState(
         attendance?.remark ?? ''
     );
-
     const [status, setStatus] = useState(
         attendance?.status ?? '未申請'
     );
 
-    const isSubmitted =
-        status === '申請中'
-        || status === '承認済';
-
-    const { auth } = usePage().props;
+    useEffect(() => {
+        setStartTime(
+            attendance?.start_time
+            ?? (
+                todayIn
+                    ? new Date(todayIn).toLocaleTimeString(
+                        'ja-JP',
+                        {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                        }
+                    )
+                    : ''
+            )
+        );
+        setEndTime(
+            attendance?.end_time
+            ?? (
+                todayOut
+                    ? new Date(todayOut).toLocaleTimeString(
+                        'ja-JP',
+                        {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false,
+                        }
+                    )
+                    : ''
+            )
+        );
+        setWorkType(
+            attendance?.work_type ?? '出勤'
+        );
+        setOffice(
+            attendance?.office ?? 'SES'
+        );
+        setTransportationFee(
+            attendance?.transportation_fee ?? 0
+        );
+        setRemark(
+            attendance?.remark ?? ''
+        );
+        setStatus(
+            attendance?.status ?? '未申請'
+        );
+    }, [
+        attendance,
+        targetDate,
+        todayIn,
+        todayOut
+    ]);
 
     const handleSubmit = async () => {
+
         try {
 
-            const response = await axios.post(
-                '/daily-attendance',
-                {
-                    work_type: workType,
-                    office: office,
-                    start_time: startTime,
-                    end_time: endTime,
-                    transportation_fee: transportationFee,
-                    remark: remark,
-                }
-            );
+            // まだレコードがない場合
+            if (!attendance) {
 
-            alert(response.data.message);
+                const response = await axios.post(
+                    '/daily-attendance',
+                    {
+                        work_type: workType,
+                        office: office,
+                        start_time: startTime,
+                        end_time: endTime,
+                        transportation_fee: transportationFee,
+                        remark: remark,
+                    }
+                );
 
-            setStatus('申請中');
+                alert(response.data.message);
+
+                router.reload();
+
+            } else {
+
+                // 申請状態切替
+                const response = await axios.post(
+                    `/daily-attendance/${attendance.id}/toggle-status`
+                );
+
+                setStatus(
+                    response.data.status
+                );
+            }
 
         } catch (error) {
 
             console.log(error);
 
-            if (error.response) {
-                console.log(error.response.data);
-                alert(error.response.data);
-            }
-
-            alert('日次申請失敗');
+            alert('処理に失敗しました');
         }
     };
 
     return (
         <MainLayout>
             <Head title="日次勤怠登録" />
-
-            <div className="max-w-4xl mx-auto bg-white shadow rounded p-8">
+            <div
+                key={targetDate}
+                className="max-w-4xl mx-auto bg-white shadow rounded p-8"
+            >
                 <h1 className="text-3xl font-bold text-center mb-10">
                     日次勤怠登録画面
                 </h1>
@@ -134,12 +192,19 @@ export default function DailyAttendance({
                         日付
                     </label>
                     <div>
-                        {new Date().toLocaleDateString('ja-JP', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            weekday: 'short',
-                        })}
+                        {
+                            targetDate
+                                ? new Date(targetDate).toLocaleDateString(
+                                    'ja-JP',
+                                    {
+                                        year: 'numeric',
+                                        month: '2-digit',
+                                        day: '2-digit',
+                                        weekday: 'short',
+                                    }
+                                )
+                                : ''
+                        }
                     </div>
                 </div>
 
@@ -202,34 +267,6 @@ export default function DailyAttendance({
                     />
                 </div>
 
-                {/* 翌日チェック */}
-                <div className="mb-4">
-                    <label>
-                        <input type="checkbox" />
-                        <span className="ml-2">
-                            翌日
-                        </span>
-                    </label>
-                </div>
-
-                {/* 休憩時間 */}
-                <div className="mb-4">
-                    <label className="font-bold">
-                        休憩時間
-                    </label>
-                    <div className="flex gap-3">
-                        <input
-                            type="time"
-                            className="border rounded p-2"
-                        />
-                        <span>～</span>
-                        <input
-                            type="time"
-                            className="border rounded p-2"
-                        />
-                    </div>
-                </div>
-
                 {/* 交通費 */}
                 <div className="mb-4">
                     <label className="font-bold">
@@ -260,9 +297,7 @@ export default function DailyAttendance({
                     <label className="font-bold">
                         所属長コメント
                     </label>
-                    <div>
-                        -
-                    </div>
+                    <div>-</div>
                 </div>
 
                 {/* ステータス */}
@@ -278,20 +313,23 @@ export default function DailyAttendance({
                 <div className="flex gap-4">
                     <button
                         onClick={handleSubmit}
-                        disabled={isSubmitted}
                         className={`
                             text-white
                             px-5
                             py-2
                             rounded
                             ${
-                                isSubmitted
-                                    ? 'bg-gray-400 cursor-not-allowed'
+                                status === '申請中'
+                                    ? 'bg-red-500'
                                     : 'bg-green-500'
                             }
                         `}
                     >
-                        日次申請
+                        {
+                            status === '申請中'
+                                ? '申請取消'
+                                : '日次申請'
+                        }
                     </button>
                     <button
                         className="

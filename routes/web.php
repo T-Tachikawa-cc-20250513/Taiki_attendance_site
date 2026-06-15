@@ -135,23 +135,30 @@ Route::middleware('auth')->group(function () {
                 'todayIn' => $todayIn?->punched_at,
                 'todayOut' => $todayOut?->punched_at,
                 'dailyAttendance' => $dailyAttendance,
+                'targetDate' => today()->toDateString(),
             ]
         );
     });
 
-    //日次申請
+    // 日次申請
     Route::post(
         '/daily-attendance',
         [DailyAttendanceController::class, 'store']
     );
 
-    //日次申請（勤怠一覧）
+    // 日次申請（勤怠登録）
     Route::get(
         '/daily-attendance/{date}',
         [DailyAttendanceController::class, 'show']
     );
 
-    //勤怠一覧
+    // 申請状態切替
+    Route::post(
+        '/daily-attendance/{id}/toggle-status',
+        [DailyAttendanceController::class, 'toggleStatus']
+    );
+
+    // 勤怠一覧
     Route::get(
         '/attendances',
         [AttendanceListController::class, 'index']

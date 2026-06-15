@@ -13,7 +13,7 @@ class AttendanceListController extends Controller
     {
         $month = $request->month ?? now()->format('Y-m');
 
-        $attendances = DailyAttendance::where(
+        $query = DailyAttendance::where(
             'user_id',
             Auth::id()
         )
@@ -24,15 +24,33 @@ class AttendanceListController extends Controller
         ->whereMonth(
             'work_date',
             substr($month, 5, 2)
-        )
-        ->latest('work_date')
-        ->get();
+        );
+
+        if ($request->work_type) {
+            $query->where(
+                'work_type',
+                $request->work_type
+            );
+        }
+
+        if ($request->status) {
+            $query->where(
+                'status',
+                $request->status
+            );
+        }
+
+        $attendances = $query
+            ->orderBy('work_date')
+            ->get();
 
         return Inertia::render(
             'Attendance/Index',
             [
                 'attendances' => $attendances,
                 'month' => $month,
+                'workType' => $request->work_type,
+                'status' => $request->status,
             ]
         );
     }

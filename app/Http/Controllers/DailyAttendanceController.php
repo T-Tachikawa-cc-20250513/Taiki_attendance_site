@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DailyAttendance;
-use Carbon\Carbon;
 use Inertia\Inertia;
 
 class DailyAttendanceController extends Controller
@@ -50,5 +49,30 @@ class DailyAttendanceController extends Controller
                 'todayOut' => null,
             ]
         );
+    }
+
+    public function toggleStatus($id)
+    {
+        $attendance = DailyAttendance::where(
+            'user_id',
+            Auth::id()
+        )
+        ->findOrFail($id);
+
+        if ($attendance->status === '申請中') {
+
+            $attendance->status = '未申請';
+
+        } else {
+
+            $attendance->status = '申請中';
+
+        }
+
+        $attendance->save();
+
+        return response()->json([
+            'status' => $attendance->status,
+        ]);
     }
 }
