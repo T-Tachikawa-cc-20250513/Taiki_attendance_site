@@ -43,6 +43,14 @@ export default function DailyAttendance({
             )
     );
 
+    const [breakStartTime, setBreakStartTime] = useState(
+        attendance?.break_start_time ?? ''
+    );
+
+    const [breakEndTime, setBreakEndTime] = useState(
+        attendance?.break_end_time ?? ''
+    );
+
     const [workType, setWorkType] = useState(
         attendance?.work_type ?? '出勤'
     );
@@ -60,6 +68,7 @@ export default function DailyAttendance({
     );
 
     useEffect(() => {
+
         setStartTime(
             attendance?.start_time
             ?? (
@@ -75,6 +84,7 @@ export default function DailyAttendance({
                     : ''
             )
         );
+
         setEndTime(
             attendance?.end_time
             ?? (
@@ -90,18 +100,31 @@ export default function DailyAttendance({
                     : ''
             )
         );
+
+        setBreakStartTime(
+            attendance?.break_start_time ?? ''
+        );
+
+        setBreakEndTime(
+            attendance?.break_end_time ?? ''
+        );
+
         setWorkType(
             attendance?.work_type ?? '出勤'
         );
+
         setOffice(
             attendance?.office ?? 'SES'
         );
+
         setTransportationFee(
             attendance?.transportation_fee ?? 0
         );
+
         setRemark(
             attendance?.remark ?? ''
         );
+
         setStatus(
             attendance?.status ?? '未申請'
         );
@@ -112,48 +135,99 @@ export default function DailyAttendance({
         todayOut
     ]);
 
-    const handleSubmit = async () => {
+    // 登録
+    const handleSave = async () => {
+        try {
+            const response = await axios.post(
+                '/daily-attendance/save',
+                {
+                    target_date: targetDate,
+                    work_type: workType,
+                    office: office,
+                    start_time: startTime,
+                    end_time: endTime,
+                    break_start_time: breakStartTime,
+                    break_end_time: breakEndTime,
+                    transportation_fee: transportationFee,
+                    remark: remark,
+                }
+            );
+            alert(response.data.message);
+
+            router.reload();
+        } catch (error) {
+            console.log(error);
+
+            alert('登録に失敗しました');
+        }
+    };
+
+    // 申請
+    const handleApply = async () => {
+        try {
+            const response = await axios.post(
+                '/daily-attendance/apply',
+                {
+                    target_date: targetDate,
+                    work_type: workType,
+                    office: office,
+                    start_time: startTime,
+                    end_time: endTime,
+                    break_start_time: breakStartTime,
+                    break_end_time: breakEndTime,
+                    transportation_fee: transportationFee,
+                    remark: remark,
+                }
+            );
+            alert(response.data.message);
+
+            router.reload();
+
+        } catch (error) {
+            console.log(error);
+            if (
+                error.response &&
+                error.response.data &&
+                error.response.data.message
+            ){
+                alert(
+                    error.response.data.message
+                );
+            } else {
+                alert(
+                    '申請に失敗しました'
+                );
+            }
+        }
+    };
+
+    // 申請取消
+    const handleCancel = async () => {
 
         try {
 
-            // まだレコードがない場合
-            if (!attendance) {
+            await axios.post(
+                `/daily-attendance/${attendance.id}/toggle-status`
+            );
 
-                const response = await axios.post(
-                    '/daily-attendance',
-                    {
-                        work_type: workType,
-                        office: office,
-                        start_time: startTime,
-                        end_time: endTime,
-                        transportation_fee: transportationFee,
-                        remark: remark,
-                    }
-                );
+            alert('申請を取消しました');
 
-                alert(response.data.message);
-
-                router.reload();
-
-            } else {
-
-                // 申請状態切替
-                const response = await axios.post(
-                    `/daily-attendance/${attendance.id}/toggle-status`
-                );
-
-                setStatus(
-                    response.data.status
-                );
-            }
+            router.reload();
 
         } catch (error) {
 
             console.log(error);
 
-            alert('処理に失敗しました');
+            alert('申請取消に失敗しました');
         }
     };
+
+    const isHolidayType = [
+        '振替休日',
+        '欠勤',
+        '有給',
+        '特別休暇'
+    ].includes(workType);
 
     return (
         <MainLayout>
@@ -219,66 +293,117 @@ export default function DailyAttendance({
                         className="border rounded w-full p-2"
                     >
                         <option>出勤</option>
-                        <option>振出</option>
+                        <option>振替出勤</option>
+                        <option>振替休日</option>
                         <option>欠勤</option>
                         <option>有給</option>
-                        <option>特休</option>
+                        <option>特別休暇</option>
                     </select>
                 </div>
 
-                {/* 打刻拠点 */}
-                <div className="mb-4">
-                    <label className="font-bold">
-                        打刻拠点
-                    </label>
-                    <select
-                        value={office}
-                        onChange={(e) => setOffice(e.target.value)}
-                        className="border rounded w-full p-2"
-                    >
-                        <option>SES</option>
-                        <option>社内業務</option>
-                    </select>
-                </div>
+                {!isHolidayType && (
+                        <>
+                            {/* 打刻拠点 */}
+                            <div className="mb-4">
+                                <label className="font-bold">
+                                    打刻拠点
+                                </label>
+                                <select
+                                    value={office}
+                                    onChange={(e) =>
+                                        setOffice(e.target.value)
+                                    }
+                                    className="border rounded w-full p-2"
+                                >
+                                    <option>SES</option>
+                                    <option>社内業務</option>
+                                </select>
+                            </div>
 
-                {/* 出勤時刻 */}
-                <div className="mb-4">
-                    <label className="font-bold">
-                        出勤時刻
-                    </label>
-                    <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="border rounded p-2 w-full"
-                    />
-                </div>
+                            {/* 出勤時刻 */}
+                            <div className="mb-4">
+                                <label className="font-bold">
+                                    出勤時刻
+                                </label>
+                                <input
+                                    type="time"
+                                    value={startTime}
+                                    onChange={(e) =>
+                                        setStartTime(e.target.value)
+                                    }
+                                    className="border rounded p-2 w-full"
+                                />
+                            </div>
 
-                {/* 退勤時刻 */}
-                <div className="mb-4">
-                    <label className="font-bold">
-                        退勤時刻
-                    </label>
-                    <input
-                        type="time"
-                        value={endTime}
-                        onChange={(e) => setEndTime(e.target.value)}
-                        className="border rounded p-2 w-full"
-                    />
-                </div>
+                            {/* 退勤時刻 */}
+                            <div className="mb-4">
+                                <label className="font-bold">
+                                    退勤時刻
+                                </label>
+                                <input
+                                    type="time"
+                                    value={endTime}
+                                    onChange={(e) =>
+                                        setEndTime(e.target.value)
+                                    }
+                                    className="border rounded p-2 w-full"
+                                />
+                            </div>
 
-                {/* 交通費 */}
-                <div className="mb-4">
-                    <label className="font-bold">
-                        交通費
-                    </label>
-                    <input
-                        type="number"
-                        value={transportationFee}
-                        onChange={(e) => setTransportationFee(e.target.value)}
-                        className="border rounded p-2 w-full"
-                    />
-                </div>
+                            {/* 休憩時間 */}
+                            <div className="mb-4">
+                                <label className="font-bold">
+                                    休憩時間
+                                </label>
+
+                                <div className="flex items-center gap-3">
+
+                                    <input
+                                        type="time"
+                                        value={breakStartTime}
+                                        onChange={(e) =>
+                                            setBreakStartTime(
+                                                e.target.value
+                                            )
+                                        }
+                                        className="border rounded p-2"
+                                    />
+
+                                    <span>～</span>
+
+                                    <input
+                                        type="time"
+                                        value={breakEndTime}
+                                        onChange={(e) =>
+                                            setBreakEndTime(
+                                                e.target.value
+                                            )
+                                        }
+                                        className="border rounded p-2"
+                                    />
+
+                                </div>
+                            </div>
+
+                            {/* 交通費 */}
+                            <div className="mb-4">
+                                <label className="font-bold">
+                                    交通費
+                                </label>
+                                <input
+                                    type="number"
+                                    value={transportationFee}
+                                    onChange={(e) =>
+                                        setTransportationFee(
+                                            Number(e.target.value)
+                                        )
+                                    }
+                                    className="border rounded p-2 w-full"
+                                />
+                            </div>
+                        </>
+                    )
+                }
 
                 {/* 備考 */}
                 <div className="mb-4">
@@ -311,8 +436,27 @@ export default function DailyAttendance({
                 </div>
 
                 <div className="flex gap-4">
+                    {/* 登録 */}
                     <button
-                        onClick={handleSubmit}
+                        onClick={handleSave}
+                        className="
+                            bg-blue-500
+                            text-white
+                            px-5
+                            py-2
+                            rounded
+                        "
+                    >
+                        登録
+                    </button>
+
+                    {/* 申請 / 申請取消 */}
+                    <button
+                        onClick={
+                            status === '申請中'
+                                ? handleCancel
+                                : handleApply
+                        }
                         className={`
                             text-white
                             px-5
@@ -328,20 +472,10 @@ export default function DailyAttendance({
                         {
                             status === '申請中'
                                 ? '申請取消'
-                                : '日次申請'
+                                : '申請'
                         }
                     </button>
-                    <button
-                        className="
-                            bg-blue-500
-                            text-white
-                            px-5
-                            py-2
-                            rounded
-                        "
-                    >
-                        一括登録
-                    </button>
+                    {/* 戻る */}
                     <button
                         onClick={() => router.get('/attendances')}
                         className="

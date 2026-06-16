@@ -9,22 +9,145 @@ use Inertia\Inertia;
 
 class DailyAttendanceController extends Controller
 {
-    public function store(Request $request)
+    // 登録（未申請）
+    public function save(Request $request)
     {
-        $dailyAttendance = DailyAttendance::create([
-            'user_id' => Auth::id(),
-            'work_date' => today(),
-            'work_type' => $request->work_type,
-            'office' => $request->office,
-            'start_time' => $request->start_time,
-            'end_time' => $request->end_time,
-            'transportation_fee' => $request->transportation_fee,
-            'remark' => $request->remark,
-            'status' => '申請中',
+        $request->validate([
+            'target_date' => 'required|date',
+            'work_type' => 'required',
         ]);
 
+        $nonWorkingTypes = [
+            '振替休日',
+            '欠勤',
+            '有給',
+            '特別休暇',
+        ];
+
+        $isNonWorkingType = in_array(
+            $request->work_type,
+            $nonWorkingTypes
+        );
+
+        DailyAttendance::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'work_date' => $request->target_date,
+            ],
+            [
+                'work_type' => $request->work_type,
+                'office' => $isNonWorkingType
+                    ? null
+                    : $request->office,
+                'start_time' => $isNonWorkingType
+                    ? null
+                    : $request->start_time,
+                'end_time' => $isNonWorkingType
+                    ? null
+                    : $request->end_time,
+                'break_start_time' => $isNonWorkingType
+                    ? null
+                    : $request->break_start_time,
+                'break_end_time' => $isNonWorkingType
+                    ? null
+                    : $request->break_end_time,
+                'transportation_fee' => $isNonWorkingType
+                    ? 0
+                    : $request->transportation_fee,
+                'remark' => $request->remark,
+                'status' => '未申請',
+            ]
+        );
+
         return response()->json([
-            'message' => '申請成功です！',
+            'message' => '登録しました'
+        ]);
+    }
+
+    // 申請
+    public function apply(Request $request)
+    {
+        $request->validate([
+            'target_date' => 'required|date',
+            'work_type' => 'required',
+        ]);
+
+        $nonWorkingTypes = [
+            '振替休日',
+            '欠勤',
+            '有給',
+            '特別休暇',
+        ];
+
+        $isNonWorkingType = in_array(
+            $request->work_type,
+            $nonWorkingTypes
+        );
+
+        // 出勤系のみ必須チェック
+        if (!$isNonWorkingType) {
+
+            if (empty($request->start_time)) {
+
+                return response()->json([
+                    'message' => '出勤時刻は入力必須です'
+                ], 422);
+            }
+
+            if (empty($request->end_time)) {
+
+                return response()->json([
+                    'message' => '退勤時刻は入力必須です'
+                ], 422);
+            }
+
+            if (empty($request->break_start_time)) {
+
+                return response()->json([
+                    'message' => '休憩開始時刻は入力必須です'
+                ], 422);
+            }
+
+            if (empty($request->break_end_time)) {
+
+                return response()->json([
+                    'message' => '休憩終了時刻は入力必須です'
+                ], 422);
+            }
+        }
+
+        DailyAttendance::updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'work_date' => $request->target_date,
+            ],
+            [
+                'work_type' => $request->work_type,
+                'office' => $isNonWorkingType
+                    ? null
+                    : $request->office,
+                'start_time' => $isNonWorkingType
+                    ? null
+                    : $request->start_time,
+                'end_time' => $isNonWorkingType
+                    ? null
+                    : $request->end_time,
+                'break_start_time' => $isNonWorkingType
+                    ? null
+                    : $request->break_start_time,
+                'break_end_time' => $isNonWorkingType
+                    ? null
+                    : $request->break_end_time,
+                'transportation_fee' => $isNonWorkingType
+                    ? 0
+                    : $request->transportation_fee,
+                'remark' => $request->remark,
+                'status' => '申請中',
+            ]
+        );
+
+        return response()->json([
+            'message' => '申請成功です！'
         ]);
     }
 
@@ -56,8 +179,18 @@ class DailyAttendanceController extends Controller
         $attendance = DailyAttendance::where(
             'user_id',
             Auth::id()
-        )
-        ->findOrFail($id);
+        )->findOrFail($id);
+
+        if (
+            !in_array(
+                $attendance->status,
+                ['未申請', '申請中']
+            )
+        ) {
+            return response()->json([
+                'message' => '変更できません'
+            ], 400);
+        }
 
         if ($attendance->status === '申請中') {
 
@@ -72,7 +205,86 @@ class DailyAttendanceController extends Controller
         $attendance->save();
 
         return response()->json([
-            'status' => $attendance->status,
+            'status' => $attendance->status
+        ]);
+    }
+
+    // 一括申請／一括申請取消
+    public function bulkApply(Request $request)
+    {
+        $request->validate([
+            'year' => 'required|integer',
+            'month' => 'required|integer|between:1,12',
+        ]);
+
+        $startDate = sprintf(
+            '%04d-%02d-01',
+            $request->year,
+            $request->month
+        );
+
+        $endDate = date(
+            'Y-m-t',
+            strtotime($startDate)
+        );
+
+        $hasUnapplied = DailyAttendance::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereBetween(
+            'work_date',
+            [$startDate, $endDate]
+        )
+        ->where(
+            'status',
+            '未申請'
+        )
+        ->exists();
+
+        if ($hasUnapplied) {
+
+            DailyAttendance::where(
+                'user_id',
+                Auth::id()
+            )
+            ->whereBetween(
+                'work_date',
+                [$startDate, $endDate]
+            )
+            ->where(
+                'status',
+                '未申請'
+            )
+            ->update([
+                'status' => '申請中'
+            ]);
+
+            return response()->json([
+                'message' => '一括申請しました',
+                'bulkStatus' => '申請中'
+            ]);
+        }
+
+        DailyAttendance::where(
+            'user_id',
+            Auth::id()
+        )
+        ->whereBetween(
+            'work_date',
+            [$startDate, $endDate]
+        )
+        ->where(
+            'status',
+            '申請中'
+        )
+        ->update([
+            'status' => '未申請'
+        ]);
+
+        return response()->json([
+            'message' => '一括申請を取消しました',
+            'bulkStatus' => '未申請'
         ]);
     }
 }

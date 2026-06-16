@@ -13,6 +13,8 @@ class DailyAttendance extends Model
         'office',
         'start_time',
         'end_time',
+        'break_start_time',
+        'break_end_time',
         'transportation_fee',
         'remark',
         'status',
