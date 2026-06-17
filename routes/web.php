@@ -9,6 +9,7 @@ use App\Models\DailyAttendance;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DailyAttendanceController;
 use App\Http\Controllers\AttendanceListController;
+use App\Http\Controllers\AdminController;
 
 // 打刻画面（未ログインでも表示）
 Route::get('/', function () {
@@ -52,10 +53,11 @@ Route::get('/', function () {
     ]);
 });
 
-//管理者画面
-Route::get('/admin', function () {
-    return Inertia::render('Admin/Dashboard');
-});
+// 管理者画面
+Route::get(
+    '/admin',
+    [AdminController::class, 'index']
+);
 
 //ログイン後
 Route::middleware('auth')->group(function(){
