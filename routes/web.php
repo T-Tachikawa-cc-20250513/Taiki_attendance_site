@@ -59,6 +59,18 @@ Route::get(
     [AdminController::class, 'index']
 );
 
+// ユーザー取得
+Route::get(
+    '/admin/user/{userId}',
+    [AdminController::class, 'showUser']
+);
+
+// 対象月勤怠取得
+Route::get(
+    '/admin/attendances',
+    [AdminController::class, 'getAttendances']
+);
+
 //ログイン後
 Route::middleware('auth')->group(function(){
     // 打刻
