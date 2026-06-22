@@ -14,7 +14,7 @@ export default function Index({
     applyingCount,
     approvedCount,
     hasUnapplied
-}){
+}) {
 
     const [workType, setWorkType] = useState(
         initialWorkType ?? ''
@@ -64,25 +64,22 @@ export default function Index({
     };
 
     const toggleStatus = async (id) => {
+
         try {
 
             await axios.post(
                 `/daily-attendance/${id}/toggle-status`
             );
 
-            router.reload({
-                only: [
-                    'attendances',
-                    'monthlyTransportationFee'
-                ]
-            });
+            router.reload();
 
         } catch (error) {
 
             console.log(error);
 
             alert(
-                '更新に失敗しました'
+                error.response?.data?.message
+                ?? '更新に失敗しました'
             );
         }
     };
@@ -186,6 +183,7 @@ export default function Index({
 
                 {/* 検索条件 */}
                 <div className="flex gap-4 mb-8">
+
                     <select
                         value={workType}
                         onChange={(e) =>
@@ -222,6 +220,7 @@ export default function Index({
                             特別休暇
                         </option>
                     </select>
+
                     <select
                         value={status}
                         onChange={(e) =>
@@ -239,17 +238,21 @@ export default function Index({
                         <option value="">
                             全申請状況
                         </option>
+
                         <option value="未申請">
                             未申請
                         </option>
+
                         <option value="申請中">
                             申請中
                         </option>
+
                         <option value="承認済">
                             承認済
                         </option>
-                        <option value="差戻し">
-                            差戻し
+
+                        <option value="差戻">
+                            差戻
                         </option>
                     </select>
 
@@ -265,6 +268,7 @@ export default function Index({
                     >
                         検索
                     </button>
+
                     <button
                         onClick={bulkApply}
                         className={`
@@ -285,6 +289,7 @@ export default function Index({
                                 : '一括申請'
                         }
                     </button>
+
                 </div>
 
                 {/* 一覧 */}
@@ -296,24 +301,31 @@ export default function Index({
                             <th className="border p-2">
                                 日付
                             </th>
+
                             <th className="border p-2">
                                 勤務区分
                             </th>
+
                             <th className="border p-2">
                                 出勤時刻
                             </th>
+
                             <th className="border p-2">
                                 退勤時刻
                             </th>
+
                             <th className="border p-2">
                                 休憩時間
                             </th>
+
                             <th className="border p-2">
                                 交通費
                             </th>
+
                             <th className="border p-2">
                                 申請状況
                             </th>
+
                             <th className="border p-2">
                                 操作
                             </th>
@@ -322,12 +334,17 @@ export default function Index({
                     </thead>
 
                     <tbody>
+
                     {
                         attendances.map(
                             (attendance) => (
+
                                 <tr
-                                    key={attendance.work_date}
+                                    key={
+                                        attendance.work_date
+                                    }
                                 >
+
                                     <td className="border p-2">
                                         <Link
                                             href={`/daily-attendance/${attendance.work_date}`}
@@ -336,20 +353,28 @@ export default function Index({
                                                 underline
                                             "
                                         >
-                                            {attendance.work_date}
+                                            {
+                                                attendance.work_date
+                                            }
                                         </Link>
                                     </td>
 
                                     <td className="border p-2">
-                                        {attendance.work_type ?? ''}
+                                        {
+                                            attendance.work_type ?? ''
+                                        }
                                     </td>
 
                                     <td className="border p-2">
-                                        {attendance.start_time ?? ''}
+                                        {
+                                            attendance.start_time ?? ''
+                                        }
                                     </td>
 
                                     <td className="border p-2">
-                                        {attendance.end_time ?? ''}
+                                        {
+                                            attendance.end_time ?? ''
+                                        }
                                     </td>
 
                                     <td className="border p-2">
@@ -369,12 +394,20 @@ export default function Index({
                                     </td>
 
                                     <td className="border p-2">
-                                        {attendance.status}
+                                        {
+                                            attendance.status
+                                        }
                                     </td>
 
                                     <td className="border p-2">
-                                        {   attendance.id &&
-                                            attendance.status !== '承認済' && (
+
+                                        {
+                                            attendance.id &&
+                                            (
+                                                attendance.status === '未申請' ||
+                                                attendance.status === '申請中'
+                                            ) && (
+
                                                 <button
                                                     onClick={() =>
                                                         toggleStatus(
@@ -399,57 +432,72 @@ export default function Index({
                                                             : '申請'
                                                     }
                                                 </button>
+
                                             )
                                         }
+
                                     </td>
+
                                 </tr>
+
                             )
                         )
                     }
+
                     </tbody>
 
                 </table>
 
                 {/* 月間集計 */}
                 <div className="mt-8 border rounded p-6 bg-gray-100">
+
                     <h2 className="text-xl font-bold mb-5">
                         月間集計
                     </h2>
+
                     <div className="grid grid-cols-2 gap-y-4">
+
                         <div>
                             出勤日数：
                             <span className="font-bold">
                                 {workDays}日
                             </span>
                         </div>
+
                         <div>
                             総勤務時間：
                             <span className="font-bold">
                                 {totalWorkHours}
                             </span>
                         </div>
+
                         <div>
                             月間交通費合計：
                             <span className="font-bold">
                                 {monthlyTransportationFee}円
                             </span>
                         </div>
+
                         <div>
                             申請中件数：
                             <span className="font-bold text-orange-600">
                                 {applyingCount}件
                             </span>
                         </div>
+
                         <div>
                             承認済件数：
                             <span className="font-bold text-green-600">
                                 {approvedCount}件
                             </span>
                         </div>
+
                     </div>
 
                 </div>
+
             </div>
+
         </MainLayout>
     );
 }

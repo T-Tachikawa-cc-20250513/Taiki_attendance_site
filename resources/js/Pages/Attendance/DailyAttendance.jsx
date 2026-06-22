@@ -229,6 +229,10 @@ export default function DailyAttendance({
         '特別休暇'
     ].includes(workType);
 
+    const isEditable =
+    status === '未申請'
+    || status === '差戻';
+
     return (
         <MainLayout>
             <Head title="日次勤怠登録" />
@@ -290,6 +294,7 @@ export default function DailyAttendance({
                     <select
                         value={workType}
                         onChange={(e) => setWorkType(e.target.value)}
+                        disabled={!isEditable}
                         className="border rounded w-full p-2"
                     >
                         <option>出勤</option>
@@ -313,6 +318,7 @@ export default function DailyAttendance({
                                     onChange={(e) =>
                                         setOffice(e.target.value)
                                     }
+                                    disabled={!isEditable}
                                     className="border rounded w-full p-2"
                                 >
                                     <option>SES</option>
@@ -331,6 +337,7 @@ export default function DailyAttendance({
                                     onChange={(e) =>
                                         setStartTime(e.target.value)
                                     }
+                                    disabled={!isEditable}
                                     className="border rounded p-2 w-full"
                                 />
                             </div>
@@ -346,6 +353,7 @@ export default function DailyAttendance({
                                     onChange={(e) =>
                                         setEndTime(e.target.value)
                                     }
+                                    disabled={!isEditable}
                                     className="border rounded p-2 w-full"
                                 />
                             </div>
@@ -366,6 +374,7 @@ export default function DailyAttendance({
                                                 e.target.value
                                             )
                                         }
+                                        disabled={!isEditable}
                                         className="border rounded p-2"
                                     />
 
@@ -379,6 +388,7 @@ export default function DailyAttendance({
                                                 e.target.value
                                             )
                                         }
+                                        disabled={!isEditable}
                                         className="border rounded p-2"
                                     />
 
@@ -398,6 +408,7 @@ export default function DailyAttendance({
                                             Number(e.target.value)
                                         )
                                     }
+                                    disabled={!isEditable}
                                     className="border rounded p-2 w-full"
                                 />
                             </div>
@@ -413,6 +424,7 @@ export default function DailyAttendance({
                     <textarea
                         value={remark}
                         onChange={(e) => setRemark(e.target.value)}
+                        disabled={!isEditable}
                         className="border rounded p-2 w-full"
                     />
                 </div>
@@ -422,7 +434,13 @@ export default function DailyAttendance({
                     <label className="font-bold">
                         所属長コメント
                     </label>
-                    <div>-</div>
+
+                    <div className="border rounded p-3 bg-gray-50">
+                        {
+                            attendance?.manager_comment
+                            ?? '-'
+                        }
+                    </div>
                 </div>
 
                 {/* ステータス */}
@@ -437,44 +455,49 @@ export default function DailyAttendance({
 
                 <div className="flex gap-4">
                     {/* 登録 */}
-                    <button
-                        onClick={handleSave}
-                        className="
-                            bg-blue-500
-                            text-white
-                            px-5
-                            py-2
-                            rounded
-                        "
-                    >
-                        登録
-                    </button>
+                    {isEditable && (
+                        <button
+                            onClick={handleSave}
+                            className="
+                                bg-blue-500
+                                text-white
+                                px-5
+                                py-2
+                                rounded
+                            "
+                        >
+                            登録
+                        </button>
+                    )}
 
                     {/* 申請 / 申請取消 */}
-                    <button
-                        onClick={
-                            status === '申請中'
-                                ? handleCancel
-                                : handleApply
-                        }
-                        className={`
-                            text-white
-                            px-5
-                            py-2
-                            rounded
-                            ${
+                    {status !== '承認済' && (
+                        <button
+                            onClick={
                                 status === '申請中'
-                                    ? 'bg-red-500'
-                                    : 'bg-green-500'
+                                    ? handleCancel
+                                    : handleApply
                             }
-                        `}
-                    >
-                        {
-                            status === '申請中'
-                                ? '申請取消'
-                                : '申請'
-                        }
-                    </button>
+                            className={`
+                                text-white
+                                px-5
+                                py-2
+                                rounded
+                                ${
+                                    status === '申請中'
+                                        ? 'bg-red-500'
+                                        : 'bg-green-500'
+                                }
+                            `}
+                        >
+                            {
+                                status === '申請中'
+                                    ? '申請取消'
+                                    : '申請'
+                            }
+                        </button>
+                    )}
+
                     {/* 戻る */}
                     <button
                         onClick={() => router.get('/attendances')}

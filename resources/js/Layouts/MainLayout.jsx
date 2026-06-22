@@ -1,12 +1,24 @@
 import { Link, usePage } from '@inertiajs/react';
 
-export default function MainLayout({ children }) {
+export default function MainLayout({
+    children
+}) {
+
     const { auth } = usePage().props;
 
     return (
         <>
             <header className="bg-blue-600 text-white shadow">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+                <div className="
+                    max-w-7xl
+                    mx-auto
+                    px-6
+                    py-4
+                    flex
+                    justify-between
+                    items-center
+                ">
 
                     <h1 className="text-xl font-bold">
                         勤怠管理システム
@@ -14,31 +26,31 @@ export default function MainLayout({ children }) {
 
                     <nav className="flex gap-4">
 
-                        {/* 打刻画面 */}
                         <Link href="/">
                             打刻
                         </Link>
 
                         {auth?.user && (
                             <>
-                                {/* 日次勤怠登録画面 */}
                                 <Link href="/daily-attendance">
                                     日次勤怠登録画面
                                 </Link>
 
-                                {/* 勤怠一覧画面 */}
                                 <Link href="/attendances">
                                     勤怠一覧
                                 </Link>
 
-                                {/* 管理者画面 */}
-                                <Link href="/admin">
-                                    管理者画面
-                                </Link>
+                                {/* 管理者のみ表示 */}
+                                {auth.user.is_admin && (
+                                    <Link href="/admin">
+                                        管理者画面
+                                    </Link>
+                                )}
                             </>
                         )}
 
                         {auth?.user ? (
+
                             <Link
                                 href="/logout"
                                 method="post"
@@ -46,7 +58,9 @@ export default function MainLayout({ children }) {
                             >
                                 ログアウト
                             </Link>
+
                         ) : (
+
                             <>
                                 <Link href="/register">
                                     会員登録
@@ -56,11 +70,13 @@ export default function MainLayout({ children }) {
                                     ログイン
                                 </Link>
                             </>
+
                         )}
 
                     </nav>
 
                 </div>
+
             </header>
 
             <main>

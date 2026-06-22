@@ -105,7 +105,6 @@ class AdminController extends Controller
             $month
         );
 
-        // 状態絞り込み
         if (
             $request->filled('status')
         ) {
@@ -116,13 +115,55 @@ class AdminController extends Controller
         }
 
         $attendances = $query
-            ->orderBy(
-                'work_date'
-            )
+            ->orderBy('work_date')
             ->get();
 
         return response()->json(
             $attendances
         );
+    }
+
+    /**
+     * 承認
+     */
+    public function approve($id)
+    {
+        $attendance =
+            DailyAttendance::findOrFail($id);
+
+        $attendance->status = '承認済';
+
+        $attendance->save();
+
+        return response()->json([
+            'message' => '承認しました'
+        ]);
+    }
+
+    /**
+     * 差戻
+     */
+    public function reject(
+        Request $request,
+        $id
+    ) {
+        $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $attendance =
+            DailyAttendance::findOrFail($id);
+
+        $attendance->status = '差戻';
+
+        // 差戻理由を保存するカラムがある場合
+        // $attendance->reject_reason
+        //     = $request->reason;
+
+        $attendance->save();
+
+        return response()->json([
+            'message' => '差し戻しました'
+        ]);
     }
 }

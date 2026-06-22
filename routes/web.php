@@ -46,33 +46,56 @@ Route::get('/', function () {
         ->first();
     }
 
-    return Inertia::render('Attendance/Punch', [
-        'lastPunchType' => $lastPunch?->punch_type,
-        'todayIn'       => $todayIn?->punched_at,
-        'todayOut'      => $todayOut?->punched_at,
-    ]);
+    return Inertia::render(
+        'Attendance/Punch',
+        [
+            'lastPunchType' => $lastPunch?->punch_type,
+            'todayIn'       => $todayIn?->punched_at,
+            'todayOut'      => $todayOut?->punched_at,
+        ]
+    );
 });
 
-// 管理者画面
-Route::get(
-    '/admin',
-    [AdminController::class, 'index']
-);
+// 管理者専用
+Route::middleware([
+    'auth',
+    'admin',
+])->group(function () {
 
-// ユーザー取得
-Route::get(
-    '/admin/user/{userId}',
-    [AdminController::class, 'showUser']
-);
+    // 管理者画面
+    Route::get(
+        '/admin',
+        [AdminController::class, 'index']
+    );
 
-// 対象月勤怠取得
-Route::get(
-    '/admin/attendances',
-    [AdminController::class, 'getAttendances']
-);
+    // ユーザー取得
+    Route::get(
+        '/admin/user/{userId}',
+        [AdminController::class, 'showUser']
+    );
 
-//ログイン後
-Route::middleware('auth')->group(function(){
+    // 対象月勤怠取得
+    Route::get(
+        '/admin/attendances',
+        [AdminController::class, 'getAttendances']
+    );
+
+    // 承認
+    Route::post(
+        '/admin/attendance/{id}/approve',
+        [AdminController::class, 'approve'
+    ]);
+
+    // 差戻
+    Route::post(
+        '/admin/attendance/{id}/reject',
+        [AdminController::class, 'reject']
+    );
+});
+
+// ログイン後
+Route::middleware('auth')->group(function () {
+
     // 打刻
     Route::post(
         '/punch',
@@ -99,14 +122,14 @@ Route::middleware('auth')->group(function(){
                 [
                     'attendance' => $attendance,
                     'targetDate' => today()->toDateString(),
-                    'todayIn' => null,
-                    'todayOut' => null,
+                    'todayIn'    => null,
+                    'todayOut'   => null,
                 ]
             );
         }
     );
 
-    // 登録（未申請）
+    // 登録
     Route::post(
         '/daily-attendance/save',
         [DailyAttendanceController::class, 'save']
@@ -124,7 +147,7 @@ Route::middleware('auth')->group(function(){
         [DailyAttendanceController::class, 'bulkApply']
     );
 
-    // 日付指定の日次勤怠画面
+    // 日付指定画面
     Route::get(
         '/daily-attendance/{date}',
         [DailyAttendanceController::class, 'show']
