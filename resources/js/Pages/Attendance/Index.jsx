@@ -204,6 +204,9 @@ export default function Index({
                         <option value="出勤">
                             出勤
                         </option>
+                        <option value="公休">
+                            公休
+                        </option>
                         <option value="振替出勤">
                             振替出勤
                         </option>

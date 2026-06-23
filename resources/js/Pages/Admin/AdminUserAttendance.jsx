@@ -125,15 +125,17 @@ export default function AdminUserAttendance({
 
         try {
 
-            await axios.post(
-                '/admin/bulk-approve',
-                {
-                    month,
-                }
-            );
+            const response =
+                await axios.post(
+                    '/admin/bulk-approve',
+                    {
+                        month,
+                        user_id: userId,
+                    }
+                );
 
             alert(
-                '一括承認しました'
+                response.data.message
             );
 
             loadMonthData(
@@ -141,10 +143,15 @@ export default function AdminUserAttendance({
                 statusFilter
             );
 
-        } catch {
+        } catch (error) {
+
+            console.log(
+                error.response
+            );
 
             alert(
-                '一括承認失敗'
+                error.response?.data?.message
+                ?? '一括承認失敗'
             );
         }
     };
@@ -253,12 +260,15 @@ export default function AdminUserAttendance({
                         <option value="">
                             全件
                         </option>
+
                         <option value="申請中">
                             承認待ち
                         </option>
+
                         <option value="承認済">
                             承認済
                         </option>
+
                         <option value="差戻">
                             差戻
                         </option>
@@ -459,11 +469,8 @@ export default function AdminUserAttendance({
                             )
 
                         )}
-
                     </tbody>
-
                 </table>
-
             </div>
         </AdminLayout>
     );

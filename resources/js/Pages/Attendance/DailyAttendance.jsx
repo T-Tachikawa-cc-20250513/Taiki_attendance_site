@@ -226,7 +226,8 @@ export default function DailyAttendance({
         '振替休日',
         '欠勤',
         '有給',
-        '特別休暇'
+        '特別休暇',
+        '公休'
     ].includes(workType);
 
     const isEditable =
@@ -291,6 +292,7 @@ export default function DailyAttendance({
                     <label className="font-bold">
                         勤務区分
                     </label>
+
                     <select
                         value={workType}
                         onChange={(e) => setWorkType(e.target.value)}
@@ -298,6 +300,7 @@ export default function DailyAttendance({
                         className="border rounded w-full p-2"
                     >
                         <option>出勤</option>
+                        <option>公休</option>
                         <option>振替出勤</option>
                         <option>振替休日</option>
                         <option>欠勤</option>

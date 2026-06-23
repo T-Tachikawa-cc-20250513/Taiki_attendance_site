@@ -9,51 +9,62 @@ use Inertia\Inertia;
 
 class DailyAttendanceController extends Controller
 {
+    /**
+     * 非勤務系勤務区分
+     */
+    private array $nonWorkingTypes = [
+        '振替休日',
+        '公休',
+        '欠勤',
+        '有給',
+        '特別休暇',
+    ];
+
     // 登録（未申請）
     public function save(Request $request)
     {
         $request->validate([
             'target_date' => 'required|date',
-            'work_type' => 'required',
+            'work_type'   => 'required',
         ]);
-
-        $nonWorkingTypes = [
-            '振替休日',
-            '欠勤',
-            '有給',
-            '特別休暇',
-        ];
 
         $isNonWorkingType = in_array(
             $request->work_type,
-            $nonWorkingTypes
+            $this->nonWorkingTypes
         );
 
         DailyAttendance::updateOrCreate(
             [
-                'user_id' => Auth::id(),
+                'user_id'   => Auth::id(),
                 'work_date' => $request->target_date,
             ],
             [
                 'work_type' => $request->work_type,
+
                 'office' => $isNonWorkingType
                     ? null
                     : $request->office,
+
                 'start_time' => $isNonWorkingType
                     ? null
                     : $request->start_time,
+
                 'end_time' => $isNonWorkingType
                     ? null
                     : $request->end_time,
+
                 'break_start_time' => $isNonWorkingType
                     ? null
                     : $request->break_start_time,
+
                 'break_end_time' => $isNonWorkingType
                     ? null
                     : $request->break_end_time,
+
                 'transportation_fee' => $isNonWorkingType
                     ? 0
                     : $request->transportation_fee,
+
                 'remark' => $request->remark,
                 'status' => '未申請',
             ]
@@ -69,47 +80,36 @@ class DailyAttendanceController extends Controller
     {
         $request->validate([
             'target_date' => 'required|date',
-            'work_type' => 'required',
+            'work_type'   => 'required',
         ]);
-
-        $nonWorkingTypes = [
-            '振替休日',
-            '欠勤',
-            '有給',
-            '特別休暇',
-        ];
 
         $isNonWorkingType = in_array(
             $request->work_type,
-            $nonWorkingTypes
+            $this->nonWorkingTypes
         );
 
         // 出勤系のみ必須チェック
         if (!$isNonWorkingType) {
 
             if (empty($request->start_time)) {
-
                 return response()->json([
                     'message' => '出勤時刻は入力必須です'
                 ], 422);
             }
 
             if (empty($request->end_time)) {
-
                 return response()->json([
                     'message' => '退勤時刻は入力必須です'
                 ], 422);
             }
 
             if (empty($request->break_start_time)) {
-
                 return response()->json([
                     'message' => '休憩開始時刻は入力必須です'
                 ], 422);
             }
 
             if (empty($request->break_end_time)) {
-
                 return response()->json([
                     'message' => '休憩終了時刻は入力必須です'
                 ], 422);
@@ -118,29 +118,36 @@ class DailyAttendanceController extends Controller
 
         DailyAttendance::updateOrCreate(
             [
-                'user_id' => Auth::id(),
+                'user_id'   => Auth::id(),
                 'work_date' => $request->target_date,
             ],
             [
                 'work_type' => $request->work_type,
+
                 'office' => $isNonWorkingType
                     ? null
                     : $request->office,
+
                 'start_time' => $isNonWorkingType
                     ? null
                     : $request->start_time,
+
                 'end_time' => $isNonWorkingType
                     ? null
                     : $request->end_time,
+
                 'break_start_time' => $isNonWorkingType
                     ? null
                     : $request->break_start_time,
+
                 'break_end_time' => $isNonWorkingType
                     ? null
                     : $request->break_end_time,
+
                 'transportation_fee' => $isNonWorkingType
                     ? 0
                     : $request->transportation_fee,
+
                 'remark' => $request->remark,
                 'status' => '申請中',
             ]
@@ -168,8 +175,8 @@ class DailyAttendanceController extends Controller
             [
                 'attendance' => $attendance,
                 'targetDate' => $date,
-                'todayIn' => null,
-                'todayOut' => null,
+                'todayIn'    => null,
+                'todayOut'   => null,
             ]
         );
     }
@@ -192,15 +199,10 @@ class DailyAttendanceController extends Controller
             ], 400);
         }
 
-        if ($attendance->status === '申請中') {
-
-            $attendance->status = '未申請';
-
-        } else {
-
-            $attendance->status = '申請中';
-
-        }
+        $attendance->status =
+            $attendance->status === '申請中'
+                ? '未申請'
+                : '申請中';
 
         $attendance->save();
 
@@ -213,7 +215,7 @@ class DailyAttendanceController extends Controller
     public function bulkApply(Request $request)
     {
         $request->validate([
-            'year' => 'required|integer',
+            'year'  => 'required|integer',
             'month' => 'required|integer|between:1,12',
         ]);
 
@@ -261,7 +263,7 @@ class DailyAttendanceController extends Controller
             ]);
 
             return response()->json([
-                'message' => '一括申請しました',
+                'message'    => '一括申請しました',
                 'bulkStatus' => '申請中'
             ]);
         }
@@ -283,7 +285,7 @@ class DailyAttendanceController extends Controller
         ]);
 
         return response()->json([
-            'message' => '一括申請を取消しました',
+            'message'    => '一括申請を取消しました',
             'bulkStatus' => '未申請'
         ]);
     }

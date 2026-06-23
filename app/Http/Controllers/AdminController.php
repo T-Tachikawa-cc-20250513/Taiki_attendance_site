@@ -166,4 +166,49 @@ class AdminController extends Controller
             'message' => '差し戻しました'
         ]);
     }
+
+    //一括承認
+    public function bulkApprove(Request $request)
+    {
+        $request->validate([
+            'month'   => 'required|date_format:Y-m',
+            'user_id' => 'required|integer',
+        ]);
+
+        $year = substr(
+            $request->month,
+            0,
+            4
+        );
+
+        $month = substr(
+            $request->month,
+            5,
+            2
+        );
+
+        DailyAttendance::where(
+            'user_id',
+            $request->user_id
+        )
+        ->whereYear(
+            'work_date',
+            $year
+        )
+        ->whereMonth(
+            'work_date',
+            $month
+        )
+        ->where(
+            'status',
+            '申請中'
+        )
+        ->update([
+            'status' => '承認済'
+        ]);
+
+        return response()->json([
+            'message' => '一括承認しました'
+        ]);
+    }
 }

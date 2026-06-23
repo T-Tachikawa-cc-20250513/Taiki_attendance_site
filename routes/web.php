@@ -83,13 +83,19 @@ Route::middleware([
     // 承認
     Route::post(
         '/admin/attendance/{id}/approve',
-        [AdminController::class, 'approve'
-    ]);
+        [AdminController::class, 'approve']
+    );
 
     // 差戻
     Route::post(
         '/admin/attendance/{id}/reject',
         [AdminController::class, 'reject']
+    );
+
+    // 一括承認
+    Route::post(
+        '/admin/bulk-approve',
+        [AdminController::class, 'bulkApprove']
     );
 });
 
