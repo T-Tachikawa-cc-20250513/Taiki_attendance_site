@@ -26,18 +26,26 @@ export default function MainLayout({
 
                     <nav className="flex gap-4">
 
+                        {/* 打刻 */}
                         <Link href="/">
                             打刻
                         </Link>
 
                         {auth?.user && (
                             <>
+                                {/* 日次勤怠登録 */}
                                 <Link href="/daily-attendance">
                                     日次勤怠登録画面
                                 </Link>
 
+                                {/* 勤怠一覧 */}
                                 <Link href="/attendances">
                                     勤怠一覧
+                                </Link>
+
+                                {/* 届出一覧 */}
+                                <Link href="/leave-requests">
+                                    届出一覧
                                 </Link>
 
                                 {/* 管理者のみ表示 */}

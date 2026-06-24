@@ -201,26 +201,13 @@ export default function Index({
                         <option value="">
                             全勤務区分
                         </option>
+
                         <option value="出勤">
                             出勤
                         </option>
+
                         <option value="公休">
                             公休
-                        </option>
-                        <option value="振替出勤">
-                            振替出勤
-                        </option>
-                        <option value="振替休日">
-                            振替休日
-                        </option>
-                        <option value="欠勤">
-                            欠勤
-                        </option>
-                        <option value="有給">
-                            有給
-                        </option>
-                        <option value="特別休暇">
-                            特別休暇
                         </option>
                     </select>
 

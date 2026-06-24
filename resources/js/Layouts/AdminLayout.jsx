@@ -33,8 +33,9 @@ export default function AdminLayout({
                     >
                         管理者画面
                     </h1>
-                    
+
                     <div className="flex gap-3">
+
                         {showDashboardLink && (
                             <Link
                                 href="/admin"
@@ -50,6 +51,20 @@ export default function AdminLayout({
                             </Link>
                         )}
 
+                        {/* 届出管理画面 */}
+                        <Link
+                            href="/admin/leave-requests"
+                            className="
+                                bg-blue-600
+                                text-white
+                                px-4
+                                py-2
+                                rounded
+                            "
+                        >
+                            届出管理
+                        </Link>
+
                         <Link
                             href="/"
                             className="
@@ -62,9 +77,11 @@ export default function AdminLayout({
                         >
                             ユーザー画面へ
                         </Link>
+
                     </div>
                 </div>
             </header>
+
             <main>
                 {children}
             </main>

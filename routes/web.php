@@ -6,10 +6,12 @@ use Inertia\Inertia;
 
 use App\Models\AttendanceRawPunch;
 use App\Models\DailyAttendance;
+
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\DailyAttendanceController;
 use App\Http\Controllers\AttendanceListController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\LeaveRequestController;
 
 // 打刻画面（未ログインでも表示）
 Route::get('/', function () {
@@ -97,6 +99,37 @@ Route::middleware([
         '/admin/bulk-approve',
         [AdminController::class, 'bulkApprove']
     );
+
+    /*
+    |--------------------------------------------------------------------------
+    | 管理者 届出機能
+    |--------------------------------------------------------------------------
+    */
+
+    // 届出一覧
+    Route::get(
+        '/admin/leave-requests',
+        [LeaveRequestController::class, 'adminIndex']
+    );
+
+    // 届出詳細
+    Route::get(
+        '/admin/leave-request/{id}',
+        [LeaveRequestController::class, 'adminShow']
+    );
+
+    // 承認
+    Route::post(
+        '/admin/leave-request/{id}/approve',
+        [LeaveRequestController::class, 'approve']
+    );
+
+    // 差戻
+    Route::post(
+        '/admin/leave-request/{id}/reject',
+        [LeaveRequestController::class, 'reject']
+    );
+    
 });
 
 // ログイン後
@@ -169,6 +202,42 @@ Route::middleware('auth')->group(function () {
     Route::get(
         '/attendances',
         [AttendanceListController::class, 'index']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | ユーザー 届出機能
+    |--------------------------------------------------------------------------
+    */
+
+    // 届出一覧画面
+    Route::get(
+        '/leave-requests',
+        [LeaveRequestController::class, 'index']
+    );
+
+    // 届出登録画面
+    Route::get(
+        '/leave-request/create',
+        [LeaveRequestController::class, 'create']
+    );
+
+    // 届出保存（未申請）
+    Route::post(
+        '/leave-request/save',
+        [LeaveRequestController::class, 'store']
+    );
+
+    // 届出申請
+    Route::post(
+        '/leave-request/apply',
+        [LeaveRequestController::class, 'apply']
+    );
+
+    // 申請取消
+    Route::post(
+        '/leave-request/{id}/cancel',
+        [LeaveRequestController::class, 'cancel']
     );
 });
 

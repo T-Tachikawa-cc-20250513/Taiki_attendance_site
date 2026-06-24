@@ -13,11 +13,7 @@ class DailyAttendanceController extends Controller
      * 非勤務系勤務区分
      */
     private array $nonWorkingTypes = [
-        '振替休日',
         '公休',
-        '欠勤',
-        '有給',
-        '特別休暇',
     ];
 
     // 登録（未申請）

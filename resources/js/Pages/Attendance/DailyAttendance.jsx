@@ -223,10 +223,6 @@ export default function DailyAttendance({
     };
 
     const isHolidayType = [
-        '振替休日',
-        '欠勤',
-        '有給',
-        '特別休暇',
         '公休'
     ].includes(workType);
 
@@ -301,11 +297,6 @@ export default function DailyAttendance({
                     >
                         <option>出勤</option>
                         <option>公休</option>
-                        <option>振替出勤</option>
-                        <option>振替休日</option>
-                        <option>欠勤</option>
-                        <option>有給</option>
-                        <option>特別休暇</option>
                     </select>
                 </div>
 
