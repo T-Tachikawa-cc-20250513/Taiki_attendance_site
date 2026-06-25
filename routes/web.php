@@ -12,6 +12,7 @@ use App\Http\Controllers\DailyAttendanceController;
 use App\Http\Controllers\AttendanceListController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\AdminLeaveRequestController;
 
 // 打刻画面（未ログインでも表示）
 Route::get('/', function () {
@@ -109,27 +110,20 @@ Route::middleware([
     // 届出一覧
     Route::get(
         '/admin/leave-requests',
-        [LeaveRequestController::class, 'adminIndex']
-    );
-
-    // 届出詳細
-    Route::get(
-        '/admin/leave-request/{id}',
-        [LeaveRequestController::class, 'adminShow']
+        [AdminLeaveRequestController::class, 'index']
     );
 
     // 承認
     Route::post(
-        '/admin/leave-request/{id}/approve',
-        [LeaveRequestController::class, 'approve']
+        '/admin/leave-requests/{id}/approve',
+        [AdminLeaveRequestController::class, 'approve']
     );
 
     // 差戻
     Route::post(
-        '/admin/leave-request/{id}/reject',
-        [LeaveRequestController::class, 'reject']
+        '/admin/leave-requests/{id}/reject',
+        [AdminLeaveRequestController::class, 'reject']
     );
-    
 });
 
 // ログイン後

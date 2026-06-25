@@ -7,6 +7,7 @@ export default function AdminUserAttendance({
     attendances = [],
     month: initialMonth,
     userId,
+    userName,
 }) {
 
     const [
@@ -204,6 +205,7 @@ export default function AdminUserAttendance({
     return (
         <AdminLayout
             showDashboardLink
+            leaveRequestUserId={userId}
         >
             <div className="p-8">
 
@@ -216,6 +218,26 @@ export default function AdminUserAttendance({
                 >
                     勤怠承認画面
                 </h2>
+
+                <div
+                    className="
+                        mb-6
+                        text-lg
+                        text-gray-700
+                        bg-blue-50
+                        border
+                        border-blue-200
+                        rounded
+                        px-4
+                        py-3
+                        inline-block
+                    "
+                >
+                    選択中のユーザー：
+                    <span className="font-bold ml-2">
+                        {userName}
+                    </span>
+                </div>
 
                 <div className="flex gap-3 mb-6 flex-wrap">
 

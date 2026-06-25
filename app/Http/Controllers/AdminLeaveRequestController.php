@@ -11,18 +11,20 @@ class AdminLeaveRequestController extends Controller
     /**
      * 届出一覧画面
      */
-    public function index()
+    public function index(Request $request)
     {
-        $requests = LeaveRequest::with(
-            'user'
-        )
-        ->orderByDesc('created_at')
-        ->get();
+        $userId = $request->userId;
+
+        $requests = LeaveRequest::with('user')
+            ->where('user_id', $userId)
+            ->orderByDesc('created_at')
+            ->get();
 
         return Inertia::render(
-            'Admin/AdminLeaveRequest',
+            'Admin/AdminLeaveRequestList',
             [
                 'requests' => $requests,
+                'userId'   => $userId,
             ]
         );
     }
@@ -35,9 +37,20 @@ class AdminLeaveRequestController extends Controller
         $requestData =
             LeaveRequest::findOrFail($id);
 
+        if (
+            $requestData->status !== '申請中'
+        ) {
+
+            return response()->json([
+                'message' =>
+                    '申請中データのみ承認できます'
+            ], 400);
+        }
+
         $requestData->status =
             '承認済';
 
+        // 差戻理由をクリア
         $requestData->reject_reason =
             null;
 
@@ -63,9 +76,20 @@ class AdminLeaveRequestController extends Controller
         $requestData =
             LeaveRequest::findOrFail($id);
 
+        if (
+            $requestData->status !== '申請中'
+        ) {
+
+            return response()->json([
+                'message' =>
+                    '申請中データのみ差戻できます'
+            ], 400);
+        }
+
         $requestData->status =
             '差戻';
 
+        // 差戻理由を保存
         $requestData->reject_reason =
             $request->reason;
 

@@ -3,6 +3,9 @@ import { Link } from '@inertiajs/react';
 export default function AdminLayout({
     children,
     showDashboardLink = false,
+    showLeaveRequestLink = true,
+    showBackButton = false,
+    leaveRequestUserId = null,
 }) {
     return (
         <>
@@ -51,19 +54,40 @@ export default function AdminLayout({
                             </Link>
                         )}
 
-                        {/* 届出管理画面 */}
-                        <Link
-                            href="/admin/leave-requests"
-                            className="
-                                bg-blue-600
-                                text-white
-                                px-4
-                                py-2
-                                rounded
-                            "
-                        >
-                            届出管理
-                        </Link>
+                        {showBackButton && (
+                            <button
+                                onClick={() =>
+                                    window.history.back()
+                                }
+                                className="
+                                    bg-yellow-500
+                                    text-white
+                                    px-4
+                                    py-2
+                                    rounded
+                                "
+                            >
+                                戻る
+                            </button>
+                        )}
+
+                        {showLeaveRequestLink &&
+                            leaveRequestUserId && (
+                                <Link
+                                    href={
+                                        `/admin/leave-requests?userId=${leaveRequestUserId}`
+                                    }
+                                    className="
+                                        bg-blue-600
+                                        text-white
+                                        px-4
+                                        py-2
+                                        rounded
+                                    "
+                                >
+                                    届出管理
+                                </Link>
+                            )}
 
                         <Link
                             href="/"

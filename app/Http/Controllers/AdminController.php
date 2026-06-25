@@ -32,7 +32,12 @@ class AdminController extends Controller
         Request $request,
         $userId
     ) {
+
         $month = now()->format('Y-m');
+
+        $user = User::findOrFail(
+            $userId
+        );
 
         $attendances = DailyAttendance::with(
             'user'
@@ -61,6 +66,7 @@ class AdminController extends Controller
                 'attendances' => $attendances,
                 'month'       => $month,
                 'userId'      => $userId,
+                'userName'    => $user->name,
             ]
         );
     }
@@ -71,6 +77,7 @@ class AdminController extends Controller
     public function getAttendances(
         Request $request
     ) {
+
         $request->validate([
             'month'   => 'required|date_format:Y-m',
             'user_id' => 'required|integer',
@@ -108,6 +115,7 @@ class AdminController extends Controller
         if (
             $request->filled('status')
         ) {
+
             $query->where(
                 'status',
                 $request->status
@@ -131,7 +139,8 @@ class AdminController extends Controller
         $attendance =
             DailyAttendance::findOrFail($id);
 
-        $attendance->status = '承認済';
+        $attendance->status =
+            '承認済';
 
         $attendance->save();
 
@@ -147,6 +156,7 @@ class AdminController extends Controller
         Request $request,
         $id
     ) {
+
         $request->validate([
             'reason' => 'required|string',
         ]);
@@ -154,9 +164,10 @@ class AdminController extends Controller
         $attendance =
             DailyAttendance::findOrFail($id);
 
-        $attendance->status = '差戻';
+        $attendance->status =
+            '差戻';
 
-        // 差戻理由を保存するカラムがある場合
+        // 差戻理由を保存する場合
         // $attendance->reject_reason
         //     = $request->reason;
 
@@ -167,9 +178,13 @@ class AdminController extends Controller
         ]);
     }
 
-    //一括承認
-    public function bulkApprove(Request $request)
-    {
+    /**
+     * 一括承認
+     */
+    public function bulkApprove(
+        Request $request
+    ) {
+
         $request->validate([
             'month'   => 'required|date_format:Y-m',
             'user_id' => 'required|integer',
