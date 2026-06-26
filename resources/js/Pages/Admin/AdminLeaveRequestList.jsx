@@ -1,10 +1,27 @@
 import AdminLayout from '@/Layouts/AdminLayout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 
 export default function AdminLeaveRequestList({
     requests,
+    userId,
+    status = '申請中',
 }) {
+
+    const changeStatus = (e) => {
+
+        router.get(
+            '/admin/leave-requests',
+            {
+                userId: userId,
+                status: e.target.value,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            }
+        );
+    };
 
     const approve = async (id) => {
 
@@ -28,7 +45,42 @@ export default function AdminLeaveRequestList({
 
             console.log(error);
 
-            alert('承認に失敗しました');
+            alert(
+                error.response?.data?.message
+                ?? '承認に失敗しました'
+            );
+        }
+    };
+
+    const bulkApprove = async () => {
+
+        if (
+            !confirm('申請中の届出を一括承認しますか？')
+        ) {
+            return;
+        }
+
+        try {
+
+            await axios.post(
+                '/admin/leave-requests/bulk-approve',
+                {
+                    user_id: userId,
+                }
+            );
+
+            alert('一括承認しました');
+
+            location.reload();
+
+        } catch (error) {
+
+            console.log(error);
+
+            alert(
+                error.response?.data?.message
+                ?? '一括承認に失敗しました'
+            );
         }
     };
 
@@ -59,7 +111,10 @@ export default function AdminLeaveRequestList({
 
             console.log(error);
 
-            alert('差戻に失敗しました');
+            alert(
+                error.response?.data?.message
+                ?? '差戻に失敗しました'
+            );
         }
     };
 
@@ -83,15 +138,75 @@ export default function AdminLeaveRequestList({
                 "
             >
 
-                <h1
+                <div
                     className="
-                        text-3xl
-                        font-bold
+                        flex
+                        justify-between
+                        items-center
                         mb-8
                     "
                 >
-                    届出承認画面
-                </h1>
+
+                    <h1
+                        className="
+                            text-3xl
+                            font-bold
+                        "
+                    >
+                        届出承認画面
+                    </h1>
+
+                    <div className="flex gap-4">
+
+                        <select
+                            value={status}
+                            onChange={changeStatus}
+                            className="
+                                border
+                                p-2
+                                rounded
+                            "
+                        >
+                            <option value="申請中">
+                                申請中
+                            </option>
+
+                            <option value="承認済">
+                                承認済
+                            </option>
+
+                            <option value="差戻">
+                                差戻
+                            </option>
+
+                            <option value="未申請">
+                                未申請
+                            </option>
+
+                            <option value="すべて">
+                                すべて
+                            </option>
+
+                        </select>
+
+                        {requests.length > 0 && (
+                            <button
+                                onClick={bulkApprove}
+                                className="
+                                    bg-green-600
+                                    text-white
+                                    px-4
+                                    py-2
+                                    rounded
+                                "
+                            >
+                                一括承認
+                            </button>
+                        )}
+
+                    </div>
+
+                </div>
 
                 <table
                     className="
@@ -105,7 +220,7 @@ export default function AdminLeaveRequestList({
                         <tr>
 
                             <th className="border p-2">
-                                社員名
+                                申請日時
                             </th>
 
                             <th className="border p-2">
@@ -113,7 +228,7 @@ export default function AdminLeaveRequestList({
                             </th>
 
                             <th className="border p-2">
-                                開始日
+                                対象日
                             </th>
 
                             <th className="border p-2">
@@ -164,7 +279,20 @@ export default function AdminLeaveRequestList({
                                     >
 
                                         <td className="border p-2">
-                                            {request.user?.name}
+                                            {
+                                                new Date(request.created_at)
+                                                    .toLocaleString(
+                                                        'ja-JP',
+                                                        {
+                                                            year: 'numeric',
+                                                            month: '2-digit',
+                                                            day: '2-digit',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                        }
+                                                    )
+                                            }
                                         </td>
 
                                         <td className="border p-2">

@@ -113,10 +113,16 @@ Route::middleware([
         [AdminLeaveRequestController::class, 'index']
     );
 
-    // 承認
+    // 個別承認
     Route::post(
         '/admin/leave-requests/{id}/approve',
         [AdminLeaveRequestController::class, 'approve']
+    );
+
+    // 一括承認
+    Route::post(
+        '/admin/leave-requests/bulk-approve',
+        [AdminLeaveRequestController::class, 'bulkApprove']
     );
 
     // 差戻
@@ -235,4 +241,4 @@ Route::middleware('auth')->group(function () {
     );
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

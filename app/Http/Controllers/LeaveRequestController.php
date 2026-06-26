@@ -12,19 +12,31 @@ class LeaveRequestController extends Controller
     /**
      * ユーザー：届出一覧
      */
-    public function index()
+    public function index(Request $request)
     {
+        $status = $request->status ?? '申請中';
+
         $leaveRequests = LeaveRequest::where(
             'user_id',
             Auth::id()
         )
-        ->orderByDesc('start_date')
+        ->when(
+            $status !== 'すべて',
+            function ($query) use ($status) {
+                $query->where(
+                    'status',
+                    $status
+                );
+            }
+        )
+        ->orderByDesc('created_at')
         ->get();
 
         return Inertia::render(
             'LeaveRequest/Index',
             [
                 'leaveRequests' => $leaveRequests,
+                'status'        => $status,
             ]
         );
     }
@@ -47,7 +59,6 @@ class LeaveRequestController extends Controller
         $request->validate([
             'request_type' => 'required|string',
             'start_date'   => 'required|date',
-            'end_date'     => 'nullable|date|after_or_equal:start_date',
             'reason'       => 'required|string',
             'image'        => 'nullable|image|max:2048',
         ]);
@@ -68,7 +79,6 @@ class LeaveRequestController extends Controller
             'user_id'         => Auth::id(),
             'request_type'    => $request->request_type,
             'start_date'      => $request->start_date,
-            'end_date'        => $request->end_date,
             'reason'          => $request->reason,
             'attachment_path' => $attachmentPath,
             'status'          => '未申請',
@@ -87,7 +97,6 @@ class LeaveRequestController extends Controller
         $request->validate([
             'request_type' => 'required|string',
             'start_date'   => 'required|date',
-            'end_date'     => 'nullable|date|after_or_equal:start_date',
             'reason'       => 'required|string',
             'image'        => 'nullable|image|max:2048',
         ]);
@@ -108,7 +117,6 @@ class LeaveRequestController extends Controller
             'user_id'         => Auth::id(),
             'request_type'    => $request->request_type,
             'start_date'      => $request->start_date,
-            'end_date'        => $request->end_date,
             'reason'          => $request->reason,
             'attachment_path' => $attachmentPath,
             'status'          => '申請中',
