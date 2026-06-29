@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DailyAttendance;
+use App\Models\MonthlyClosing;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -39,7 +40,6 @@ class AttendanceListController extends Controller
 
         $attendances = [];
 
-        // 月間集計用
         $monthlyTransportationFee = 0;
         $workDays = 0;
         $totalWorkMinutes = 0;
@@ -77,17 +77,13 @@ class AttendanceListController extends Controller
                     );
             }
 
-            // 月間交通費
             $monthlyTransportationFee +=
                 $attendance?->transportation_fee ?? 0;
 
-            // 出勤日数
             if ($attendance?->work_type === '出勤') {
-
                 $workDays++;
             }
 
-            // 総勤務時間
             if (
                 $attendance?->start_time
                 &&
@@ -110,18 +106,15 @@ class AttendanceListController extends Controller
                     );
             }
 
-            // ステータス件数
             if (
                 $attendance?->status === '申請中'
             ) {
-
                 $applyingCount++;
             }
 
             if (
                 $attendance?->status === '承認済'
             ) {
-
                 $approvedCount++;
             }
 
@@ -137,7 +130,6 @@ class AttendanceListController extends Controller
             ];
         }
 
-        // 勤務区分絞り込み
         if ($request->work_type) {
 
             $attendances = array_filter(
@@ -150,7 +142,6 @@ class AttendanceListController extends Controller
             );
         }
 
-        // ステータス絞り込み
         if ($request->status) {
 
             $attendances = array_filter(
@@ -176,6 +167,19 @@ class AttendanceListController extends Controller
                     $attendance['status'] === '未申請';
             });
 
+        /**
+         * 月締済判定
+         */
+        $isClosed = MonthlyClosing::where(
+            'user_id',
+            Auth::id()
+        )
+        ->where(
+            'target_month',
+            $month
+        )
+        ->exists();
+
         return Inertia::render(
             'Attendance/Index',
             [
@@ -184,18 +188,30 @@ class AttendanceListController extends Controller
                 'workType' => $request->work_type,
                 'status' => $request->status,
 
-                // 月間集計
-                'monthlyTransportationFee' => $monthlyTransportationFee,
-                'workDays' => $workDays,
-                'totalWorkHours' =>
-                    sprintf(
+                'monthlyTransportationFee'
+                    => $monthlyTransportationFee,
+
+                'workDays'
+                    => $workDays,
+
+                'totalWorkHours'
+                    => sprintf(
                         '%02d:%02d',
                         floor($totalWorkMinutes / 60),
                         $totalWorkMinutes % 60
                     ),
-                'applyingCount' => $applyingCount,
-                'approvedCount' => $approvedCount,
-                'hasUnapplied' => $hasUnapplied,
+
+                'applyingCount'
+                    => $applyingCount,
+
+                'approvedCount'
+                    => $approvedCount,
+
+                'hasUnapplied'
+                    => $hasUnapplied,
+
+                'isClosed'
+                    => $isClosed,
             ]
         );
     }

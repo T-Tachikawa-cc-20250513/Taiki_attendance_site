@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\DailyAttendance;
+use App\Models\MonthlyClosing;
 use Inertia\Inertia;
 
 class DailyAttendanceController extends Controller
@@ -16,9 +17,38 @@ class DailyAttendanceController extends Controller
         '公休',
     ];
 
+    /**
+     * 月締済チェック
+     * ※管理者は月締後も編集可能
+     */
+    private function isClosed($date)
+    {
+        // 管理者は月締後も編集可能
+        if (Auth::user()?->role === 'admin') {
+            return false;
+        }
+
+        return MonthlyClosing::where(
+            'user_id',
+            Auth::id()
+        )
+        ->where(
+            'target_month',
+            date('Y-m', strtotime($date))
+        )
+        ->exists();
+    }
+
     // 登録（未申請）
     public function save(Request $request)
     {
+        if ($this->isClosed($request->target_date)) {
+
+            return response()->json([
+                'message' => '月締済のため編集できません'
+            ], 403);
+        }
+
         $request->validate([
             'target_date' => 'required|date',
             'work_type'   => 'required',
@@ -74,6 +104,13 @@ class DailyAttendanceController extends Controller
     // 申請
     public function apply(Request $request)
     {
+        if ($this->isClosed($request->target_date)) {
+
+            return response()->json([
+                'message' => '月締済のため編集できません'
+            ], 403);
+        }
+
         $request->validate([
             'target_date' => 'required|date',
             'work_type'   => 'required',
@@ -84,7 +121,6 @@ class DailyAttendanceController extends Controller
             $this->nonWorkingTypes
         );
 
-        // 出勤系のみ必須チェック
         if (!$isNonWorkingType) {
 
             if (empty($request->start_time)) {
@@ -166,6 +202,22 @@ class DailyAttendanceController extends Controller
         )
         ->first();
 
+        $isClosed = false;
+
+        // 管理者以外のみ月締判定
+        if (Auth::user()?->role !== 'admin') {
+
+            $isClosed = MonthlyClosing::where(
+                'user_id',
+                Auth::id()
+            )
+            ->where(
+                'target_month',
+                date('Y-m', strtotime($date))
+            )
+            ->exists();
+        }
+
         return Inertia::render(
             'Attendance/DailyAttendance',
             [
@@ -173,6 +225,7 @@ class DailyAttendanceController extends Controller
                 'targetDate' => $date,
                 'todayIn'    => null,
                 'todayOut'   => null,
+                'isClosed'   => $isClosed,
             ]
         );
     }
@@ -183,6 +236,13 @@ class DailyAttendanceController extends Controller
             'user_id',
             Auth::id()
         )->findOrFail($id);
+
+        if ($this->isClosed($attendance->work_date)) {
+
+            return response()->json([
+                'message' => '月締済のため変更できません'
+            ], 403);
+        }
 
         if (
             !in_array(
@@ -207,7 +267,6 @@ class DailyAttendanceController extends Controller
         ]);
     }
 
-    // 一括申請／一括申請取消
     public function bulkApply(Request $request)
     {
         $request->validate([
@@ -215,11 +274,31 @@ class DailyAttendanceController extends Controller
             'month' => 'required|integer|between:1,12',
         ]);
 
-        $startDate = sprintf(
-            '%04d-%02d-01',
+        $targetMonth = sprintf(
+            '%04d-%02d',
             $request->year,
             $request->month
         );
+
+        if (
+            Auth::user()?->role !== 'admin'
+            &&
+            MonthlyClosing::where(
+                'user_id',
+                Auth::id()
+            )
+            ->where(
+                'target_month',
+                $targetMonth
+            )
+            ->exists()
+        ) {
+            return response()->json([
+                'message' => '月締済のため変更できません'
+            ], 403);
+        }
+
+        $startDate = "{$targetMonth}-01";
 
         $endDate = date(
             'Y-m-t',

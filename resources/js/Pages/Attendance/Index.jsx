@@ -13,7 +13,8 @@ export default function Index({
     totalWorkHours,
     applyingCount,
     approvedCount,
-    hasUnapplied
+    hasUnapplied,
+    isClosed,
 }) {
 
     const [workType, setWorkType] = useState(
@@ -25,6 +26,7 @@ export default function Index({
     );
 
     const isBulkApplied = !hasUnapplied;
+    const canEdit = !isClosed;
 
     const moveMonth = (diff) => {
 
@@ -84,7 +86,6 @@ export default function Index({
         }
     };
 
-    // 一括申請／一括申請取消
     const bulkApply = async () => {
 
         try {
@@ -108,7 +109,7 @@ export default function Index({
 
         } catch (error) {
 
-            console.log('ERROR', error);
+            console.log(error);
 
             if (error.response?.data?.message) {
 
@@ -127,6 +128,7 @@ export default function Index({
 
     return (
         <MainLayout>
+
             <Head title="勤怠一覧" />
 
             <div className="max-w-6xl mx-auto bg-white shadow rounded p-8">
@@ -134,6 +136,23 @@ export default function Index({
                 <h1 className="text-3xl font-bold text-center mb-10">
                     勤怠一覧画面
                 </h1>
+
+                {isClosed && (
+                    <div
+                        className="
+                            mb-6
+                            text-red-600
+                            font-bold
+                            bg-red-50
+                            border
+                            border-red-200
+                            p-3
+                            rounded
+                        "
+                    >
+                        ※この月は月締済のため編集できません
+                    </div>
+                )}
 
                 {/* 月切替 */}
                 <div className="flex items-center gap-4 mb-8">
@@ -179,6 +198,7 @@ export default function Index({
                     >
                         次月 →
                     </button>
+
                 </div>
 
                 {/* 検索条件 */}
@@ -191,12 +211,7 @@ export default function Index({
                                 e.target.value
                             )
                         }
-                        className="
-                            border
-                            rounded
-                            p-2
-                            w-40
-                        "
+                        className="border rounded p-2 w-40"
                     >
                         <option value="">
                             全勤務区分
@@ -218,12 +233,7 @@ export default function Index({
                                 e.target.value
                             )
                         }
-                        className="
-                            border
-                            rounded
-                            p-2
-                            w-40
-                        "
+                        className="border rounded p-2 w-40"
                     >
                         <option value="">
                             全申請状況
@@ -259,26 +269,28 @@ export default function Index({
                         検索
                     </button>
 
-                    <button
-                        onClick={bulkApply}
-                        className={`
-                            text-white
-                            px-4
-                            py-2
-                            rounded
-                            ${
+                    {canEdit && (
+                        <button
+                            onClick={bulkApply}
+                            className={`
+                                text-white
+                                px-4
+                                py-2
+                                rounded
+                                ${
+                                    isBulkApplied
+                                        ? 'bg-red-500'
+                                        : 'bg-green-500'
+                                }
+                            `}
+                        >
+                            {
                                 isBulkApplied
-                                    ? 'bg-red-500'
-                                    : 'bg-green-500'
+                                    ? '一括申請取消'
+                                    : '一括申請'
                             }
-                        `}
-                    >
-                        {
-                            isBulkApplied
-                                ? '一括申請取消'
-                                : '一括申請'
-                        }
-                    </button>
+                        </button>
+                    )}
 
                 </div>
 
@@ -288,151 +300,113 @@ export default function Index({
                     <thead className="bg-gray-200">
 
                         <tr>
-                            <th className="border p-2">
-                                日付
-                            </th>
-
-                            <th className="border p-2">
-                                勤務区分
-                            </th>
-
-                            <th className="border p-2">
-                                出勤時刻
-                            </th>
-
-                            <th className="border p-2">
-                                退勤時刻
-                            </th>
-
-                            <th className="border p-2">
-                                休憩時間
-                            </th>
-
-                            <th className="border p-2">
-                                交通費
-                            </th>
-
-                            <th className="border p-2">
-                                申請状況
-                            </th>
-
-                            <th className="border p-2">
-                                操作
-                            </th>
+                            <th className="border p-2">日付</th>
+                            <th className="border p-2">勤務区分</th>
+                            <th className="border p-2">出勤時刻</th>
+                            <th className="border p-2">退勤時刻</th>
+                            <th className="border p-2">休憩時間</th>
+                            <th className="border p-2">交通費</th>
+                            <th className="border p-2">申請状況</th>
+                            <th className="border p-2">操作</th>
                         </tr>
 
                     </thead>
 
                     <tbody>
 
-                    {
-                        attendances.map(
-                            (attendance) => (
+                    {attendances.map(
+                        (attendance) => (
 
-                                <tr
-                                    key={
-                                        attendance.work_date
+                            <tr key={attendance.work_date}>
+
+                                <td className="border p-2">
+                                    <Link
+                                        href={`/daily-attendance/${attendance.work_date}`}
+                                        className="
+                                            text-blue-600
+                                            underline
+                                        "
+                                    >
+                                        {attendance.work_date}
+                                    </Link>
+                                </td>
+
+                                <td className="border p-2">
+                                    {attendance.work_type ?? ''}
+                                </td>
+
+                                <td className="border p-2">
+                                    {attendance.start_time ?? ''}
+                                </td>
+
+                                <td className="border p-2">
+                                    {attendance.end_time ?? ''}
+                                </td>
+
+                                <td className="border p-2">
+                                    {
+                                        attendance.break_minutes > 0
+                                            ? `${attendance.break_minutes / 60}時間`
+                                            : ''
                                     }
-                                >
+                                </td>
 
-                                    <td className="border p-2">
-                                        <Link
-                                            href={`/daily-attendance/${attendance.work_date}`}
-                                            className="
-                                                text-blue-600
-                                                underline
-                                            "
-                                        >
-                                            {
-                                                attendance.work_date
-                                            }
-                                        </Link>
-                                    </td>
+                                <td className="border p-2">
+                                    {
+                                        attendance.transportation_fee > 0
+                                            ? `${attendance.transportation_fee}円`
+                                            : ''
+                                    }
+                                </td>
 
-                                    <td className="border p-2">
-                                        {
-                                            attendance.work_type ?? ''
-                                        }
-                                    </td>
+                                <td className="border p-2">
+                                    {attendance.status}
+                                </td>
 
-                                    <td className="border p-2">
-                                        {
-                                            attendance.start_time ?? ''
-                                        }
-                                    </td>
+                                <td className="border p-2">
 
-                                    <td className="border p-2">
-                                        {
-                                            attendance.end_time ?? ''
-                                        }
-                                    </td>
+                                    {
+                                        canEdit &&
+                                        attendance.id &&
+                                        (
+                                            attendance.status === '未申請' ||
+                                            attendance.status === '申請中'
+                                        ) && (
 
-                                    <td className="border p-2">
-                                        {
-                                            attendance.break_minutes > 0
-                                                ? `${attendance.break_minutes / 60}時間`
-                                                : ''
-                                        }
-                                    </td>
-
-                                    <td className="border p-2">
-                                        {
-                                            attendance.transportation_fee > 0
-                                                ? `${attendance.transportation_fee}円`
-                                                : ''
-                                        }
-                                    </td>
-
-                                    <td className="border p-2">
-                                        {
-                                            attendance.status
-                                        }
-                                    </td>
-
-                                    <td className="border p-2">
-
-                                        {
-                                            attendance.id &&
-                                            (
-                                                attendance.status === '未申請' ||
-                                                attendance.status === '申請中'
-                                            ) && (
-
-                                                <button
-                                                    onClick={() =>
-                                                        toggleStatus(
-                                                            attendance.id
-                                                        )
-                                                    }
-                                                    className={`
-                                                        text-white
-                                                        px-3
-                                                        py-1
-                                                        rounded
-                                                        ${
-                                                            attendance.status === '申請中'
-                                                                ? 'bg-red-500'
-                                                                : 'bg-green-500'
-                                                        }
-                                                    `}
-                                                >
-                                                    {
+                                            <button
+                                                onClick={() =>
+                                                    toggleStatus(
+                                                        attendance.id
+                                                    )
+                                                }
+                                                className={`
+                                                    text-white
+                                                    px-3
+                                                    py-1
+                                                    rounded
+                                                    ${
                                                         attendance.status === '申請中'
-                                                            ? '申請取消'
-                                                            : '申請'
+                                                            ? 'bg-red-500'
+                                                            : 'bg-green-500'
                                                     }
-                                                </button>
+                                                `}
+                                            >
+                                                {
+                                                    attendance.status === '申請中'
+                                                        ? '申請取消'
+                                                        : '申請'
+                                                }
+                                            </button>
 
-                                            )
-                                        }
+                                        )
+                                    }
 
-                                    </td>
+                                </td>
 
-                                </tr>
+                            </tr>
 
-                            )
                         )
-                    }
+                    )}
 
                     </tbody>
 

@@ -13,6 +13,7 @@ use App\Http\Controllers\AttendanceListController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\LeaveRequestController;
 use App\Http\Controllers\AdminLeaveRequestController;
+use App\Http\Controllers\MonthlyClosingController;
 
 // 打刻画面（未ログインでも表示）
 Route::get('/', function () {
@@ -99,6 +100,17 @@ Route::middleware([
     Route::post(
         '/admin/bulk-approve',
         [AdminController::class, 'bulkApprove']
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | 月締処理
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/admin/month-close',
+        [MonthlyClosingController::class, 'close']
     );
 
     /*

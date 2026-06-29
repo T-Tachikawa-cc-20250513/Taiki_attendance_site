@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\DailyAttendance;
+use App\Models\ClosedAttendance;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -39,6 +40,7 @@ class AdminController extends Controller
             $userId
         );
 
+        // 通常勤怠
         $attendances = DailyAttendance::with(
             'user'
         )
@@ -59,6 +61,16 @@ class AdminController extends Controller
             '申請中'
         )
         ->get();
+
+        // 月締済データがあれば優先表示
+        $closedAttendances = ClosedAttendance::with('user')
+            ->where('user_id', $userId)
+            ->where('target_month', $month)
+            ->get();
+
+        if ($closedAttendances->count() > 0) {
+            $attendances = $closedAttendances;
+        }
 
         return Inertia::render(
             'Admin/AdminUserAttendance',
@@ -84,6 +96,40 @@ class AdminController extends Controller
             'status'  => 'nullable|string',
         ]);
 
+        // 月締済みデータを確認
+        $closedQuery = ClosedAttendance::with('user')
+            ->where(
+                'user_id',
+                $request->user_id
+            )
+            ->where(
+                'target_month',
+                $request->month
+            );
+
+        if (
+            $request->filled('status')
+        ) {
+
+            $closedQuery->where(
+                'status',
+                $request->status
+            );
+        }
+
+        $closedAttendances = $closedQuery
+            ->orderBy('work_date')
+            ->get();
+
+        // 月締済ならそちらを返す
+        if ($closedAttendances->count() > 0) {
+
+            return response()->json(
+                $closedAttendances
+            );
+        }
+
+        // 通常テーブル検索
         $year = substr(
             $request->month,
             0,
@@ -166,10 +212,6 @@ class AdminController extends Controller
 
         $attendance->status =
             '差戻';
-
-        // 差戻理由を保存する場合
-        // $attendance->reject_reason
-        //     = $request->reason;
 
         $attendance->save();
 

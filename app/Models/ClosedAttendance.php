@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DailyAttendance extends Model
+class ClosedAttendance extends Model
 {
     protected $fillable = [
         'user_id',
+        'target_month',
         'work_date',
         'work_type',
         'office',
@@ -21,27 +22,8 @@ class DailyAttendance extends Model
         'manager_comment',
     ];
 
-    /**
-     * ユーザー
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    /**
-     * 月締データ
-     */
-    public function monthlyAttendance()
-    {
-        return $this->hasOne(
-            MonthlyAttendance::class,
-            'user_id',
-            'user_id'
-        )
-        ->whereColumn(
-            'target_month',
-            \DB::raw("DATE_FORMAT(work_date, '%Y-%m')")
-        );
     }
 }
