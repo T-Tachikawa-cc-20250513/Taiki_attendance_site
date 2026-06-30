@@ -10,15 +10,17 @@ export default function MainLayout({
         <>
             <header className="bg-blue-600 text-white shadow">
 
-                <div className="
-                    max-w-7xl
-                    mx-auto
-                    px-6
-                    py-4
-                    flex
-                    justify-between
-                    items-center
-                ">
+                <div
+                    className="
+                        max-w-7xl
+                        mx-auto
+                        px-6
+                        py-4
+                        flex
+                        justify-between
+                        items-center
+                    "
+                >
 
                     <h1 className="text-xl font-bold">
                         勤怠管理システム
@@ -33,11 +35,6 @@ export default function MainLayout({
 
                         {auth?.user && (
                             <>
-                                {/* 日次勤怠登録 */}
-                                <Link href="/daily-attendance">
-                                    日次勤怠登録画面
-                                </Link>
-
                                 {/* 勤怠一覧 */}
                                 <Link href="/attendances">
                                     勤怠一覧

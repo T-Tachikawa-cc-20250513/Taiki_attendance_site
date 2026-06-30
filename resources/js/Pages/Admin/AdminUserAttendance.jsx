@@ -157,11 +157,14 @@ export default function AdminUserAttendance({
         }
     };
 
+    /**
+     * ユーザー単位の月締
+     */
     const closeMonth = async () => {
 
         if (
             !confirm(
-                '月締しますか？'
+                `${userName} の ${month} を月締しますか？`
             )
         ) {
             return;
@@ -169,21 +172,33 @@ export default function AdminUserAttendance({
 
         try {
 
-            await axios.post(
-                '/admin/month-close',
-                {
-                    month,
-                }
+            const response =
+                await axios.post(
+                    '/admin/month-close',
+                    {
+                        month,
+                        user_id: userId,
+                    }
+                );
+
+            alert(
+                response.data.message
+            );
+
+            loadMonthData(
+                month,
+                statusFilter
+            );
+
+        } catch (error) {
+
+            console.log(
+                error.response
             );
 
             alert(
-                '月締完了'
-            );
-
-        } catch {
-
-            alert(
-                '月締失敗'
+                error.response?.data?.message
+                ?? '月締失敗'
             );
         }
     };
@@ -459,6 +474,7 @@ export default function AdminUserAttendance({
                                                             px-2
                                                             py-1
                                                             rounded
+                                                            mr-2
                                                         "
                                                     >
                                                         承認
@@ -491,9 +507,13 @@ export default function AdminUserAttendance({
                             )
 
                         )}
+
                     </tbody>
+
                 </table>
+
             </div>
+
         </AdminLayout>
     );
 }

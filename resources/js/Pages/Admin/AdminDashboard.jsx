@@ -19,7 +19,7 @@ export default function AdminDashboard({
 
         if (
             !confirm(
-                `${month} を月締しますか？`
+                `${month} を全ユーザー分月締しますか？`
             )
         ) {
             return;
@@ -27,14 +27,17 @@ export default function AdminDashboard({
 
         try {
 
-            await axios.post(
-                '/admin/month-close',
-                {
-                    month,
-                }
-            );
+            const response =
+                await axios.post(
+                    '/admin/month-close',
+                    {
+                        month,
+                    }
+                );
 
-            alert('月締が完了しました');
+            alert(
+                response.data.message
+            );
 
         } catch (error) {
 
